@@ -23,6 +23,12 @@ class RabbitMQBaseClient:
         if url:
             logger.info(f"[{self.client_name}] Using RABBITMQ_URL for connection parameters.")
             self.params = pika.URLParameters(url)
+            if url.startswith("amqps://"):
+                import ssl
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                self.params.ssl_options = pika.SSLOptions(context)
         else:
             credentials = pika.PlainCredentials(self.user, self.password)
             self.params = pika.ConnectionParameters(
