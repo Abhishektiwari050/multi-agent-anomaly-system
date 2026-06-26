@@ -18,7 +18,7 @@ def main():
     planner = Planner()
     
     # Start heartbeat thread
-    heartbeat = HeartbeatThread(agent_id="agent-a", client=planner)
+    heartbeat = HeartbeatThread(agent_id="agent-a")
     heartbeat.start()
     
     # Run consumer loops

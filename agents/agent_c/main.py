@@ -18,7 +18,7 @@ def main():
     monitor = Monitor()
     
     # Start heartbeat thread
-    heartbeat = HeartbeatThread(agent_id="agent-c", client=monitor)
+    heartbeat = HeartbeatThread(agent_id="agent-c")
     heartbeat.start()
     
     # Run consumer loops

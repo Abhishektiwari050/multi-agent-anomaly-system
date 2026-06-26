@@ -18,7 +18,7 @@ def main():
     executor = Executor()
     
     # Start heartbeat thread
-    heartbeat = HeartbeatThread(agent_id="agent-b", client=executor)
+    heartbeat = HeartbeatThread(agent_id="agent-b")
     heartbeat.start()
     
     # Run consumer loops

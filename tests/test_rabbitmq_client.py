@@ -72,6 +72,7 @@ def test_publish_and_consume():
     
     # Publish message
     client.publish(ROUTING_KEY_TASK_AGENT_B, envelope)
+    time.sleep(0.5)
     
     # Start consumer in a non-blocking/timed way or just consume one message
     connection = client.connection

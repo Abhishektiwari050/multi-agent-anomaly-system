@@ -12,19 +12,24 @@ from shared.logger import setup_logger
 logger = setup_logger("agent-c-heartbeat")
 
 class HeartbeatThread(threading.Thread):
-    def __init__(self, agent_id: str, client: RabbitMQBaseClient):
+    def __init__(self, agent_id: str):
         super().__init__()
         self.agent_id = agent_id
-        self.client = client
+        self.client = RabbitMQBaseClient(f"heartbeat-{agent_id}")
         self.daemon = True
         self.running = True
         self.interval = int(os.getenv("HEARTBEAT_INTERVAL_SECONDS", "30"))
 
     def run(self):
         logger.info(f"Starting heartbeat thread for {self.agent_id} (interval: {self.interval}s)")
+        try:
+            self.client.connect()
+        except Exception as e:
+            logger.error(f"Heartbeat client failed to connect for {self.agent_id}: {e}")
+            return
+
         while self.running:
             try:
-                # Mock CPU/memory
                 cpu_pct = round(random.uniform(1.0, 15.0), 2)
                 mem_mb = round(random.uniform(50.0, 200.0), 2)
                 
@@ -57,3 +62,4 @@ class HeartbeatThread(threading.Thread):
 
     def stop(self):
         self.running = False
+        self.client.disconnect()
