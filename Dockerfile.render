@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+ENV PORT=8000
+
+# Install system dependencies if any are needed
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy all directories and configuration
+COPY shared/ ./shared/
+COPY agents/ ./agents/
+COPY api/ ./api/
+COPY supervisord.conf .
+
+# Create directory for logs and task state
+RUN mkdir -p /app/logs /app/state
+
+# Default environment configurations
+ENV STATE_FILE_PATH=/app/state/tasks.json
+ENV LOG_DIR=/app/logs
+
+EXPOSE 8000
+
+CMD ["supervisord", "-c", "supervisord.conf"]

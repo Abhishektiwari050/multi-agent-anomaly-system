@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Configuration & Secrets
+.env
+
+# Telemetry & Logs
+*.log
+logs/
+
+# Persisted state files
+tasks.json
+test_tasks*.json
+
+# OS specific files
+.DS_Store
+Thumbs.db

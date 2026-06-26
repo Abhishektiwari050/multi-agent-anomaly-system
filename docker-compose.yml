@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agent-net
+
+  agent_a:
+    build:
+      context: .
+      dockerfile: agents/agent_a/Dockerfile
+    container_name: agent_a
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - shared_state:/app/state
+      - logs_volume:/app/logs
+    networks:
+      - agent-net
+
+  agent_b:
+    build:
+      context: .
+      dockerfile: agents/agent_b/Dockerfile
+    container_name: agent_b
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - logs_volume:/app/logs
+    networks:
+      - agent-net
+
+  agent_c:
+    build:
+      context: .
+      dockerfile: agents/agent_c/Dockerfile
+    container_name: agent_c
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - shared_state:/app/state
+      - logs_volume:/app/logs
+    networks:
+      - agent-net
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: api
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - shared_state:/app/state
+    networks:
+      - agent-net
+
+volumes:
+  rabbitmq_data:
+  shared_state:
+  logs_volume:
+
+networks:
+  agent-net:
+    driver: bridge
