@@ -514,16 +514,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'Clinical Anomaly Records',
                         data: scatterData,
-                        backgroundColor: '#EF4444',
-                        borderColor: 'rgba(239, 68, 68, 0.8)',
+                        backgroundColor: '#DC2626',
+                        borderColor: 'rgba(220, 38, 38, 0.8)',
                         pointRadius: 6,
                         pointHoverRadius: 8
                     },
                     {
                         label: 'Optimal Clinical Baseline',
                         data: [{x: 80, y: 98.5}], // Single center point representing normal baseline
-                        backgroundColor: '#10B981',
-                        borderColor: 'rgba(16, 185, 129, 0.8)',
+                        backgroundColor: '#0F766E',
+                        borderColor: 'rgba(15, 118, 110, 0.8)',
                         pointRadius: 10,
                         pointStyle: 'crossRot',
                         borderWidth: 3
@@ -535,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        labels: { color: '#94A3B8', font: { family: 'Plus Jakarta Sans' } }
+                        labels: { color: '#475569', font: { family: 'Plus Jakarta Sans' } }
                     },
                     tooltip: {
                         callbacks: {
@@ -551,16 +551,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 scales: {
                     x: {
-                        title: { display: true, text: 'Heart Rate (bpm)', color: '#94A3B8' },
-                        grid: { color: 'rgba(255,255,255,0.03)' },
-                        ticks: { color: '#94A3B8' },
+                        title: { display: true, text: 'Heart Rate (bpm)', color: '#475569' },
+                        grid: { color: 'rgba(15,23,42,0.04)' },
+                        ticks: { color: '#475569' },
                         min: 30,
                         max: 220
                     },
                     y: {
-                        title: { display: true, text: 'Oxygen Saturation (SpO2 %)', color: '#94A3B8' },
-                        grid: { color: 'rgba(255,255,255,0.03)' },
-                        ticks: { color: '#94A3B8' },
+                        title: { display: true, text: 'Oxygen Saturation (SpO2 %)', color: '#475569' },
+                        grid: { color: 'rgba(15,23,42,0.04)' },
+                        ticks: { color: '#475569' },
                         min: 50,
                         max: 102
                     }
@@ -580,8 +580,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: ['High', 'Medium', 'Low'],
                 datasets: [{
                     data: [highVal, medVal, lowVal],
-                    backgroundColor: ['#EF4444', '#F59E0B', '#10B981'],
-                    borderColor: '#0B0F19',
+                    backgroundColor: ['#DC2626', '#B45309', '#0F766E'],
+                    borderColor: '#FFFFFF',
                     borderWidth: 2,
                     hoverOffset: 4
                 }]
@@ -597,6 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
     }
 
     // Toggle active panel view

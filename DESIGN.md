@@ -1,16 +1,16 @@
 ---
 version: alpha
-name: Aura Clinical System
-description: A premium, clinical-focused dark mode interface designed for real-time patient anomaly analysis. It leverages subtle glassmorphism and clear color indicators to prioritize information hierarchy.
+name: Aura Clinical Light
+description: A premium, clinical-focused light mode interface designed for real-time patient anomaly analysis. It utilizes a clean off-white background with subtle border highlights and readable, accessible color indicators.
 colors:
-  primary: "#0B0F19"
-  secondary: "#94A3B8"
-  accent: "#10B981"
-  danger: "#EF4444"
-  warning: "#F59E0B"
-  neutral: "#FFFFFF"
-  card-bg: "rgba(15, 23, 42, 0.45)"
-  border-muted: "rgba(255, 255, 255, 0.08)"
+  primary: "#F8FAFC"
+  secondary: "#475569"
+  accent: "#0F766E"
+  danger: "#DC2626"
+  warning: "#B45309"
+  neutral: "#0F172A"
+  card-bg: "rgba(255, 255, 255, 0.75)"
+  border-muted: "rgba(15, 23, 42, 0.08)"
 typography:
   body:
     fontFamily: Plus Jakarta Sans
@@ -45,7 +45,7 @@ components:
     padding: "{spacing.lg}"
   btn-primary:
     backgroundColor: "{colors.accent}"
-    textColor: "{colors.neutral}"
+    textColor: "#FFFFFF"
     rounded: "{rounded.sm}"
     padding: "10px 20px"
   status-badge:
@@ -55,18 +55,18 @@ components:
 
 ## Overview
 
-The Aura Visual Identity is designed for modern clinical dashboards that display multi-agent diagnostic information. Since clinical staff need to make quick decisions, the design prioritizes high contrast, clear information hierarchy, and intuitive color-coding. The system utilizes a deep dark slate foundation (#0B0F19) combined with translucent glassmorphic components to feel premium, calm, and futuristic.
+The Aura Visual Identity Light theme is designed for modern clinical dashboards that display multi-agent diagnostic information in well-lit medical environments. Since clinical staff need to make quick decisions without eye fatigue, the design uses a clean, calm off-white base (#F8FAFC) paired with highly legible typography. Information hierarchy is defined using thin borders, soft shadows, and WCAG AA contrast-compliant color badges.
 
 ## Colors
 
-The palette is optimized for dark environments and immediate visual alert routing:
+The palette is optimized for clean readability and quick visual alert routing:
 
-- **Primary (#0B0F19):** A deep, dark slate backing that minimizes eye strain during long monitoring shifts.
-- **Secondary (#94A3B8):** Steel/slate gray used for helper text, labels, and borders.
-- **Accent (#10B981):** A vibrant emerald green indicating active scans, clean health, and resolved statuses.
-- **Danger (#EF4444):** A medical warning red indicating a high count of severe patient anomalies.
-- **Warning (#F59E0B):** A clinical warning amber/orange indicating moderate vital anomalies requiring review.
-- **Neutral (#FFFFFF):** High contrast white for core values and readability.
+- **Primary (#F8FAFC):** A soft, subtle off-white/cool slate backing that feels clean and spacious.
+- **Secondary (#475569):** Mid-tone slate gray for captions, borders, and secondary descriptions.
+- **Accent (#0F766E):** A deep medical teal for status-positive indicators, active scans, and primary buttons.
+- **Danger (#DC2626):** A deep red indicating high-severity patient vital anomalies.
+- **Warning (#B45309):** A dark amber indicating moderate vital warning alerts.
+- **Neutral (#0F172A):** Very dark blue-slate for high contrast primary text.
 
 ## Typography
 
@@ -87,10 +87,10 @@ The screen uses a split dashboard layout:
 
 ## Elevation & Depth
 
-Layering is achieved through varying translucent styles and borders instead of heavy box-shadows:
-- **Level 1 (Base):** Flat dark backdrop.
-- **Level 2 (Panels):** Translucent card backing (`rgba(15, 23, 42, 0.45)`) combined with a faint border (`rgba(255, 255, 255, 0.08)`) and backdrop blur filter of `16px`.
-- **Level 3 (Alerts):** Strong neon borders (`#EF4444` or `#F59E0B`) mapping directly to clinical anomaly alert severities.
+Layering is achieved through soft shadows and thin borders instead of dark overlays:
+- **Level 1 (Base):** Soft slate backing.
+- **Level 2 (Panels):** Translucent white card backing (`rgba(255, 255, 255, 0.75)`) combined with a thin border (`rgba(15, 23, 42, 0.08)`) and backdrop blur filter of `16px`. Uses soft shadows.
+- **Level 3 (Alerts):** Strong colored left borders (`#DC2626` or `#B45309`) mapping directly to clinical anomaly alert severities.
 
 ## Shapes
 
@@ -106,7 +106,7 @@ Layering is achieved through varying translucent styles and borders instead of h
 
 ## Do's and Don'ts
 
-- **Do:** Use the Emerald color (`#10B981`) exclusively for positive states (running scans, system online, safe patients).
-- **Do:** Highlight critical alarms immediately using high-intensity red borders.
-- **Don't:** Mix multiple bright accent colors in a single view; use gray/slate text to keep the view clean.
-- **Don't:** Use solid, non-transparent light gray backgrounds in cards as it breaks the glassmorphism aesthetic.
+- **Do:** Ensure all status colors (teal, amber, red) meet WCAG AA contrast ratios (at least 4.5:1) against the off-white card backgrounds.
+- **Do:** Use subtle border highlights to demarcate sections instead of deep dark backgrounds.
+- **Don't:** Use pure white text on light backgrounds; always use Slate 900 (#0F172A) for body text readability.
+- **Don't:** Rely on pure black borders; use semi-transparent grays (`rgba(15, 23, 42, 0.08)`) for smooth transitions.
