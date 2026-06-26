@@ -62,3 +62,9 @@ class TaskTracker:
         self._load()
         with self.lock:
             return self.tasks.get(task_id)
+
+    def get_all_tasks(self) -> Dict[str, Any]:
+        self._load()
+        with self.lock:
+            return self.tasks
+

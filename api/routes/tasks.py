@@ -51,9 +51,17 @@ def analyze_vitals(request: AnalyzeRequest, planner: Planner = Depends(get_plann
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to submit task: {e}")
 
+@router.get("", response_model=Dict[str, Any])
+def list_tasks(tracker: TaskTracker = Depends(get_tracker)):
+    try:
+        return tracker.get_all_tasks()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch tasks: {e}")
+
 @router.get("/{task_id}/status")
 def get_task_status(task_id: str, tracker: TaskTracker = Depends(get_tracker)):
     task = tracker.get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail=f"Task {task_id} not found.")
     return task
+

@@ -90,3 +90,32 @@ def test_health_endpoint(mock_conn, client):
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert response.json()["rabbitmq"] == "connected"
+
+def test_list_tasks(client):
+    test_file = "./test_tasks_list.json"
+    tracker = TaskTracker(state_file_path=test_file)
+    tracker.update_task(
+        task_id="task-api-test-1",
+        status="IN_PROGRESS",
+        progress_pct=50,
+        current_sub_task="train"
+    )
+    tracker.update_task(
+        task_id="task-api-test-2",
+        status="COMPLETED",
+        progress_pct=100,
+        current_sub_task="report"
+    )
+
+    with patch.dict(os.environ, {"STATE_FILE_PATH": test_file}):
+        response = client.get("/tasks")
+        assert response.status_code == 200
+        data = response.json()
+        assert "task-api-test-1" in data
+        assert "task-api-test-2" in data
+        assert data["task-api-test-1"]["status"] == "IN_PROGRESS"
+        assert data["task-api-test-2"]["status"] == "COMPLETED"
+
+    if os.path.exists(test_file):
+        os.remove(test_file)
+

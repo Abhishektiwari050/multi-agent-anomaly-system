@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A premium clinical dashboard for real-time patient vitals anomaly detection powered by a multi-agent system. Coordinate, monitor, and analyze diagnostics instantly.">
+    <title>AURA: Patient Vitals Anomaly Monitor</title>
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS Styles -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Main Dashboard Layout -->
+    <div class="dashboard-container">
+        
+        <!-- Sidebar Panel -->
+        <aside class="sidebar" aria-label="Control Panel">
+            <div class="brand">
+                <i data-lucide="shield-alert" class="brand-icon"></i>
+                <div class="brand-text">
+                    <h1>AURA</h1>
+                    <span class="brand-sub">Clinical Monitoring System</span>
+                </div>
+            </div>
+            
+            <!-- Connection Status -->
+            <div class="connection-status-card" id="connection-status-container">
+                <div class="status-indicator">
+                    <span class="dot pulse" id="status-dot"></span>
+                    <span id="status-text">Checking Broker Connection...</span>
+                </div>
+                <div class="status-details" id="status-details">
+                    API Endpoint: <span class="highlight" id="api-endpoint-url">-</span>
+                </div>
+            </div>
+            
+            <!-- New Scan Section -->
+            <section class="scan-form-section" aria-labelledby="new-scan-title">
+                <h2 id="new-scan-title">New Patient Scan</h2>
+                <form id="new-scan-form" novalidate>
+                    <div class="form-group">
+                        <label for="patient-group-name">Patient Group / Label</label>
+                        <input type="text" id="patient-group-name" placeholder="e.g. ICU Ward 3 - Morning Shift" required>
+                        <span class="error-msg" id="group-name-error">Label is required</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Dataset Size (Vitals Recorded)</label>
+                        <div class="preset-buttons" id="size-presets">
+                            <button type="button" class="preset-btn" data-value="1000">1,000</button>
+                            <button type="button" class="preset-btn active" data-value="7000">7,000</button>
+                            <button type="button" class="preset-btn" data-value="20000">20,000</button>
+                        </div>
+                        <input type="number" id="custom-size" value="7000" min="10" max="100000" class="custom-input-hidden">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Sensitivity Level (Expected Contamination)</label>
+                        <div class="preset-buttons" id="contamination-presets">
+                            <button type="button" class="preset-btn" data-value="0.02">Low (2%)</button>
+                            <button type="button" class="preset-btn active" data-value="0.05">Standard (5%)</button>
+                            <button type="button" class="preset-btn" data-value="0.10">High (10%)</button>
+                        </div>
+                        <input type="number" id="custom-contamination" value="0.05" step="0.01" class="custom-input-hidden">
+                    </div>
+                    
+                    <div class="form-group row-inline">
+                        <div class="form-col">
+                            <label for="random-seed">Random Seed</label>
+                            <input type="number" id="random-seed" value="42" min="1">
+                        </div>
+                        <div class="form-col">
+                            <label for="deadline">Timeout (Mins)</label>
+                            <input type="number" id="deadline" value="5" min="1">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn" id="run-scan-btn">
+                        <i data-lucide="play"></i>
+                        <span>Run Vital Analysis</span>
+                    </button>
+                </form>
+            </section>
+            
+            <!-- Historical Scan List -->
+            <section class="history-section" aria-labelledby="history-title">
+                <div class="section-header">
+                    <h2 id="history-title">Recent Run History</h2>
+                    <button id="refresh-history-btn" class="icon-btn" title="Refresh History">
+                        <i data-lucide="refresh-cw"></i>
+                    </button>
+                </div>
+                <div class="history-list" id="history-list-container">
+                    <div class="loading-placeholder">Loading runs history...</div>
+                </div>
+            </section>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Default Welcome Dashboard Panel -->
+            <section class="panel-section welcome-panel active" id="welcome-panel" aria-label="Welcome">
+                <div class="welcome-box">
+                    <i data-lucide="activity" class="hero-icon"></i>
+                    <h2>Welcome to AURA Diagnostics</h2>
+                    <p>Aura uses a cooperative multi-agent system to ingest patient vitals, train anomaly classification models, and verify clinical alarm alerts.</p>
+                    <div class="getting-started">
+                        <h3>Getting Started</h3>
+                        <ul>
+                            <li><i data-lucide="check-circle-2"></i> Configure a scan on the left sidebar by setting a description and dataset size.</li>
+                            <li><i data-lucide="check-circle-2"></i> Run the analysis. Agents will coordinate instantly through the broker.</li>
+                            <li><i data-lucide="check-circle-2"></i> Click on any completed run in the history list to view charts and vital recommendations.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Running Scan Progress Overlay Panel -->
+            <section class="panel-section progress-panel" id="progress-panel" aria-label="Analysis Progress">
+                <div class="panel-card glass">
+                    <div class="running-header">
+                        <div class="running-info">
+                            <span class="badge badge-pulse">Analyzing</span>
+                            <h2 id="running-task-desc">Analyzing Patient Group...</h2>
+                            <p class="task-id-text">Task ID: <span id="running-task-id">None</span></p>
+                        </div>
+                        <div class="circular-progress-box">
+                            <svg class="circular-progress" viewBox="0 0 100 100">
+                                <circle class="bg" cx="50" cy="50" r="45"></circle>
+                                <circle class="bar" cx="50" cy="50" r="45" id="progress-circle"></circle>
+                            </svg>
+                            <span class="progress-val" id="progress-text-pct">0%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Stepper Progress Tracker -->
+                    <div class="stepper">
+                        <div class="step" id="step-1">
+                            <div class="step-num"><i data-lucide="loader-2" class="spin"></i></div>
+                            <div class="step-content">
+                                <h3>Step 1: Task Scheduling (Agent A)</h3>
+                                <p>Planner parses parameters and allocates queue messages.</p>
+                            </div>
+                        </div>
+                        <div class="step" id="step-2">
+                            <div class="step-num">2</div>
+                            <div class="step-content">
+                                <h3>Step 2: Synthetic Data Generation (Agent B)</h3>
+                                <p>Generates patient telemetry models (vital statistics baseline).</p>
+                            </div>
+                        </div>
+                        <div class="step" id="step-3">
+                            <div class="step-num">3</div>
+                            <div class="step-content">
+                                <h3>Step 3: Machine Learning Classification (Agent B)</h3>
+                                <p>Trains Isolation Forest model and tags multivariate anomalies.</p>
+                            </div>
+                        </div>
+                        <div class="step" id="step-4">
+                            <div class="step-num">4</div>
+                            <div class="step-content">
+                                <h3>Step 4: Report Compilation & Alerts (Agent C)</h3>
+                                <p>Monitor verifies clinical alarms and saves telemetry results.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Completed Run Results Panel -->
+            <section class="panel-section results-panel" id="results-panel" aria-label="Analysis Results">
+                <!-- Header with Action -->
+                <div class="results-header-row">
+                    <div>
+                        <span class="date-badge" id="result-timestamp">June 26, 2026</span>
+                        <h2 id="result-title">General Ward Diagnostics</h2>
+                        <p class="task-id-text">Task ID: <span id="result-task-id">None</span></p>
+                    </div>
+                    <div class="badge" id="result-alert-badge">NORMAL</div>
+                </div>
+                
+                <!-- Metric Highlights Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card glass">
+                        <span class="label">Total Records Evaluated</span>
+                        <div class="value" id="val-total-records">0</div>
+                    </div>
+                    <div class="metric-card glass danger-glow">
+                        <span class="label">Anomalies Detected</span>
+                        <div class="value color-danger" id="val-anomalies-detected">0</div>
+                    </div>
+                    <div class="metric-card glass">
+                        <span class="label">Average Anomaly Score</span>
+                        <div class="value" id="val-avg-score">0.00</div>
+                    </div>
+                    <div class="metric-card glass">
+                        <span class="label">Calculation Time</span>
+                        <div class="value" id="val-execution-time">0 ms</div>
+                    </div>
+                </div>
+                
+                <!-- Grid: Charts & Visuals -->
+                <div class="charts-grid">
+                    <div class="chart-card glass">
+                        <h3>Anomalies Vital Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="anomalies-scatter-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card glass flex-shrink">
+                        <h3>Classification Severity</h3>
+                        <div class="chart-container-donut">
+                            <canvas id="severity-donut-chart"></canvas>
+                        </div>
+                        <div class="severity-legend">
+                            <div class="legend-item"><span class="dot bg-danger"></span> High Severity: <strong id="legend-high">0</strong></div>
+                            <div class="legend-item"><span class="dot bg-warning"></span> Medium Severity: <strong id="legend-medium">0</strong></div>
+                            <div class="legend-item"><span class="dot bg-accent"></span> Low Severity: <strong id="legend-low">0</strong></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Clinical Patient Alerts Detail -->
+                <section class="alerts-section" aria-labelledby="alerts-title">
+                    <h3 id="alerts-title">Top Clinical Emergency Alerts</h3>
+                    <div class="alerts-grid" id="clinical-alerts-container">
+                        <div class="loading-placeholder">No report loaded.</div>
+                    </div>
+                </section>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Scripts Loading -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

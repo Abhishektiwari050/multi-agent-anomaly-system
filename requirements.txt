@@ -10,3 +10,5 @@ python-dotenv==1.0.1
 pytest==8.2.2
 pytest-asyncio==0.23.7
 supervisor==4.2.5
+aiofiles==23.2.1
+

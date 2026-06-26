@@ -50,6 +50,11 @@ def test_publish_and_consume():
     client = RabbitMQIntegrationClient()
     client.connect()
     
+    # Setup a temporary test queue to capture the routed message without interference from active live consumers
+    test_queue = f"test-queue-{int(time.time())}"
+    client.channel.queue_declare(queue=test_queue, durable=False, auto_delete=True)
+    client.channel.queue_bind(exchange=EXCHANGE_NAME, queue=test_queue, routing_key=ROUTING_KEY_TASK_AGENT_B)
+    
     envelope = MessageEnvelope(
         message_id="msg-test",
         sender_id="test-client",
@@ -74,12 +79,8 @@ def test_publish_and_consume():
     client.publish(ROUTING_KEY_TASK_AGENT_B, envelope)
     time.sleep(0.5)
     
-    # Start consumer in a non-blocking/timed way or just consume one message
-    connection = client.connection
-    channel = client.channel
-    
     # Let's get the message using basic_get to avoid blocking forever
-    method_frame, header_frame, body = channel.basic_get(queue=QUEUE_AGENT_B_TASKS, auto_ack=False)
+    method_frame, header_frame, body = client.channel.basic_get(queue=test_queue, auto_ack=False)
     assert method_frame is not None
     
     # Parse and verify
@@ -88,5 +89,8 @@ def test_publish_and_consume():
     assert received_env.correlation_id == "corr-test"
     
     # Clean up by acknowledging the retrieved message and closing
-    channel.basic_ack(method_frame.delivery_tag)
+    client.channel.basic_ack(method_frame.delivery_tag)
+    client.channel.queue_unbind(exchange=EXCHANGE_NAME, queue=test_queue, routing_key=ROUTING_KEY_TASK_AGENT_B)
+    client.channel.queue_delete(queue=test_queue)
     client.disconnect()
+
