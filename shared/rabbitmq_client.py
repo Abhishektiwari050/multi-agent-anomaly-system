@@ -38,7 +38,7 @@ class RabbitMQBaseClient:
     def connect(self, max_attempts: int = 10):
         for attempt in range(1, max_attempts + 1):
             try:
-                logger.info(f"[{self.client_name}] Connecting to RabbitMQ (attempt {attempt}/{max_attempts}) at {self.host}:{self.port}")
+                logger.info(f"[{self.client_name}] Connecting to RabbitMQ (attempt {attempt}/{max_attempts}) at {self.params.host}:{self.params.port}")
                 self.connection = pika.BlockingConnection(self.params)
                 self.channel = self.connection.channel()
                 self._declare_topology()
