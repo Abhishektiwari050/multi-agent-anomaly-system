@@ -24,7 +24,10 @@ async function compilePDF() {
     path: localPDFPath,
     format: 'A4',
     printBackground: true,
-    margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' }
+    displayHeaderFooter: true,
+    headerTemplate: '<div></div>', // hide default header
+    footerTemplate: '<div style="font-size:8px; width: 100%; display: flex; justify-content: space-between; padding: 0 20mm; color: #94a3b8; font-family: \'Plus Jakarta Sans\', sans-serif; font-weight: 500;"><span>Abhishek Tiwari, Developer</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>',
+    margin: { top: '20mm', right: '20mm', bottom: '25mm', left: '20mm' }
   });
   
   console.log(`PDF Generated successfully at ${localPDFPath}`);

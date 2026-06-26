@@ -2,22 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Agent Anomaly System Architecture Design</title>
+    <title>AURA: Multi-Agent Clinical Anomaly Detection System Architecture</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        @page {
-            size: A4;
-            margin: 20mm;
-            @bottom-right {
-                content: counter(page);
-                font-family: 'Inter', sans-serif;
-                font-size: 9px;
-                color: #64748b;
-            }
-        }
-        
         * {
             box-sizing: border-box;
             margin: 0;
@@ -26,7 +15,7 @@
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #1e293b;
+            color: #334155;
             line-height: 1.6;
             background-color: #ffffff;
             font-size: 13px;
@@ -38,32 +27,75 @@
             font-weight: 700;
         }
 
+        /* Cover Page / Header style */
+        .header-card {
+            border: 1px solid rgba(15, 118, 110, 0.15);
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+            border-left: 5px solid #0f766e;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
         h1 {
             font-size: 26px;
-            margin-bottom: 8px;
             color: #0f766e;
             letter-spacing: -0.02em;
+            margin-bottom: 6px;
         }
 
         .subtitle {
-            font-size: 14px;
-            color: #475569;
-            margin-bottom: var(--spacing-lg);
+            font-size: 13px;
+            color: #64748b;
             font-weight: 500;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            font-size: 11.5px;
+            border-top: 1px solid rgba(15, 23, 42, 0.06);
+            padding-top: 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            gap: 6px;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: #475569;
         }
 
         h2 {
-            font-size: 18px;
-            margin-top: 30px;
+            font-size: 16px;
+            margin-top: 35px;
             margin-bottom: 12px;
             border-bottom: 2px solid #f1f5f9;
             padding-bottom: 6px;
             color: #0f172a;
             page-break-after: avoid;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background-color: #0f766e;
+            border-radius: 2px;
         }
 
         h3 {
-            font-size: 14px;
+            font-size: 13px;
             margin-top: 20px;
             margin-bottom: 8px;
             color: #0f766e;
@@ -76,84 +108,113 @@
             text-align: justify;
         }
 
+        /* Lists */
         ul, ol {
             margin-bottom: 16px;
             padding-left: 20px;
-            color: #334155;
+            color: #475569;
         }
 
         li {
             margin-bottom: 6px;
         }
 
-        .highlight-box {
+        strong {
+            color: #0f172a;
+        }
+
+        /* Blocks */
+        .info-box {
             background-color: #f8fafc;
-            border-left: 4px solid #0f766e;
+            border: 1px solid #e2e8f0;
             padding: 16px;
             margin: 20px 0;
-            border-radius: 0 8px 8px 0;
+            border-radius: 8px;
             page-break-inside: avoid;
         }
 
-        .highlight-box h4 {
-            font-size: 13px;
-            color: #0f766e;
+        .info-box h4 {
+            font-size: 12.5px;
+            color: #0f172a;
             margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .highlight-box p {
+        .info-box p {
             margin-bottom: 0;
             font-size: 12px;
+            color: #475569;
         }
 
+        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
             page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         th, td {
             padding: 10px 12px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
-            font-size: 12px;
+            font-size: 11.5px;
         }
 
         th {
             background-color: #f8fafc;
             color: #0f172a;
             font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
         }
 
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Code snippets */
         code {
             font-family: 'JetBrains Mono', monospace;
-            background-color: #f1f5f9;
+            background-color: rgba(15, 23, 42, 0.04);
             color: #0f172a;
             padding: 2px 4px;
             border-radius: 4px;
-            font-size: 11.5px;
+            font-size: 11px;
         }
 
         pre {
             font-family: 'JetBrains Mono', monospace;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background-color: #0f172a;
+            color: #f8fafc;
+            border: 1px solid #1e293b;
             padding: 14px;
             border-radius: 8px;
             overflow-x: auto;
             margin: 16px 0;
-            font-size: 11px;
+            font-size: 10.5px;
             page-break-inside: avoid;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
+
+        /* JSON syntax colors */
+        .j-key { color: #f43f5e; }     /* Pink */
+        .j-val { color: #34d399; }     /* Green */
+        .j-num { color: #fbbf24; }     /* Amber */
+        .j-bool { color: #3b82f6; }    /* Blue */
 
         /* Diagrams */
         .diagram-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 30px 0;
-            background-color: #fafafa;
+            margin: 24px 0;
+            background-color: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             padding: 20px;
@@ -170,134 +231,88 @@
         .page-break {
             page-break-before: always;
         }
-
-        /* Header / Footer styling for PDF */
-        header {
-            margin-bottom: 40px;
-            border-bottom: 3px solid #0f766e;
-            padding-bottom: 20px;
-        }
-
-        .meta-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-            font-size: 11px;
-            color: #64748b;
-        }
-
-        .meta-item {
-            display: flex;
-            gap: 5px;
-        }
-
-        .meta-label {
-            font-weight: 600;
-            color: #475569;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Cover Page Header -->
-    <header>
-        <h1>Multi-Agent Anomaly System</h1>
-        <div class="subtitle">Clinical Vitals Telemetry Analysis & Real-Time Alert Architecture</div>
+    <!-- Cover Page / Header -->
+    <div class="header-card">
+        <h1>Multi-Agent Anomaly Detection System</h1>
+        <div class="subtitle">System Architecture Design & Communication Protocol Document</div>
         <div class="meta-grid">
             <div class="meta-item">
-                <span class="meta-label">System State:</span>
-                <span>Production Live</span>
+                <span class="meta-label">Deploy State:</span>
+                <span>Active Live (Render Container)</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">Broker Link:</span>
-                <span>CloudAMQP TLS (5671)</span>
+                <span class="meta-label">AMQP Connection:</span>
+                <span>CloudAMQP TLS (Port 5671)</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">Deployment:</span>
-                <span>Render (FastAPI + Supervisord)</span>
+                <span class="meta-label">Frameworks:</span>
+                <span>FastAPI, Scikit-Learn, Pika, supervisord</span>
             </div>
             <div class="meta-item">
-                <span class="meta-label">Documentation Version:</span>
-                <span>1.0.0 (Light Mode Release)</span>
+                <span class="meta-label">Author:</span>
+                <span>Abhishek Tiwari, Developer</span>
             </div>
         </div>
-    </header>
+    </div>
 
     <h2>1. Executive Summary</h2>
     <p>
-        The <strong>Multi-Agent Anomaly Detection System</strong> is a production-grade clinical monitoring solution designed to ingest synthetic patient vital signs, detect health anomalies using multivariate Isolation Forest models, and coordinate immediate alerts using a distributed multi-agent architecture. By separating duties across decoupled processes, the system guarantees high system availability, data integrity, and strict information security boundaries. Communication is handled via an AMQP message broker, allowing task state evaluation and clinical alerting loops to operate asynchronously and independently.
+        The <strong>Multi-Agent Anomaly Detection System</strong> is a clinical-focused diagnostics monitor. It utilizes cooperative, decoupled agents to simulate patient vitals telemetry, train multivariate Isolation Forest models, and coordinate clinical warning alerts. Written in Python and served via FastAPI, the platform leverages asynchronous queues to ensure resilience under high compute loads. All telemetry statistics (Heart Rate, $SpO_2$, Blood Pressure, Temperature, Respiratory Rate, Glucose) are generated synthetically, providing a GDPR-compliant medical testing environment.
     </p>
 
-    <div class="highlight-box">
-        <h4>Clinical Scope Disclosure</h4>
-        <p>
-            The vitals telemetry processed by the system (Heart Rate, $SpO_2$, Blood Pressure, Temperature, Respiratory Rate, and Glucose Level) is generated programmatically (synthetic data). This enables controlled injection of clinical emergency scenarios (e.g. hypoxic shock or severe arrhythmias) to test model thresholds and verify alerting pipelines without violating medical privacy regulations (HIPAA/GDPR).
-        </p>
-    </div>
-
-    <h2>2. System Architecture</h2>
+    <h2>2. System Components & Architecture</h2>
     <p>
-        The system consists of five decoupled components coordinated under a central process manager (Supervisord) on the Render host container, using a CloudAMQP RabbitMQ message broker for external state routing:
+        Decoupling is managed through a central supervisord process coordinator running inside a single Render Web Service container. Nodes communicate externally over a managed TLS CloudAMQP broker:
     </p>
     <ul>
-        <li><strong>FastAPI Gateway</strong>: Exposes the clinical dashboard endpoints, accepts new scan requests, and registers previous results from disk.</li>
-        <li><strong>Planner Agent (Agent A)</strong>: Receives REST API inputs, parses parameters, schedules anomaly evaluation runs, and records feedback loop updates.</li>
-        <li><strong>Executor Agent (Agent B)</strong>: The core processing engine. Simulates the vitals dataset, trains the multivariate Isolation Forest model, tags indices exceeding contamination bounds, and compiles telemetry files.</li>
-        <li><strong>Monitor Agent (Agent C)</strong>: Serves as the system supervisor. It receives real-time progress steps from the Executor, maintains the heartbeat registry of active processes, and evaluates alarm severity thresholds.</li>
-        <li><strong>Clinical Light Dashboard</strong>: An off-white glassmorphic user interface utilizing modern CSS layouts and Chart.js to present progress steppers, scatter plot charts, and patient-specific medical advice.</li>
+        <li><strong>FastAPI Server</strong>: Serves a lightweight, light-themed clinical dashboard. Exposes endpoints to trigger analyses (<code>POST /tasks/analyze</code>), fetch status (<code>GET /tasks/{id}/status</code>), and display previous runs (<code>GET /tasks</code>).</li>
+        <li><strong>Planner (Agent A)</strong>: Validates REST calls, creates execution parameters, publishes task messages, and tracks agent feedback metrics.</li>
+        <li><strong>Executor (Agent B)</strong>: Performs compute-intensive operations. Simulates multi-dimensional vital signs, trains a multivariate Isolation Forest algorithm, maps anomalous records, and structures detailed JSON telemetry files.</li>
+        <li><strong>Monitor (Agent C)</strong>: Supervises system state. It records progress percentages, tracks live node heartbeats, and routes critical alarms to clinicians.</li>
     </ul>
 
     <!-- Architecture Diagram -->
     <div class="diagram-container">
         <svg class="diagram-svg" viewBox="0 0 600 350" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Background Grid -->
             <rect width="600" height="350" rx="8" fill="#f8fafc"/>
             <path d="M0 50 H600 M0 300 H600" stroke="#e2e8f0" stroke-width="1"/>
             
-            <!-- Components -->
-            <!-- Web Dashboard -->
-            <rect x="20" y="80" width="130" height="60" rx="6" fill="#0f766e" fill-opacity="0.05" stroke="#0f766e" stroke-width="1.5"/>
-            <text x="85" y="110" font-family="Inter" font-size="11" font-weight="bold" fill="#0f766e" text-anchor="middle">Clinical UI (Dashboard)</text>
+            <!-- Dashboard -->
+            <rect x="25" y="80" width="130" height="60" rx="6" fill="#0f766e" fill-opacity="0.04" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="90" y="110" font-family="Inter" font-size="11" font-weight="bold" fill="#0f766e" text-anchor="middle">Clinical UI (Dashboard)</text>
             
-            <!-- FastAPI Gateway -->
-            <rect x="20" y="210" width="130" height="60" rx="6" fill="#0f766e" fill-opacity="0.05" stroke="#0f766e" stroke-width="1.5"/>
-            <text x="85" y="240" font-family="Inter" font-size="11" font-weight="bold" fill="#0f766e" text-anchor="middle">FastAPI REST Server</text>
+            <!-- FastAPI -->
+            <rect x="25" y="210" width="130" height="60" rx="6" fill="#0f766e" fill-opacity="0.04" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="90" y="240" font-family="Inter" font-size="11" font-weight="bold" fill="#0f766e" text-anchor="middle">FastAPI REST Server</text>
             
-            <!-- RabbitMQ Broker -->
-            <rect x="220" y="140" width="140" height="80" rx="6" fill="#b45309" fill-opacity="0.05" stroke="#b45309" stroke-width="1.5"/>
-            <text x="290" y="180" font-family="Inter" font-size="12" font-weight="bold" fill="#b45309" text-anchor="middle">CloudAMQP Broker</text>
-            <text x="290" y="195" font-family="Inter" font-size="9" fill="#b45309" text-anchor="middle">(RabbitMQ Exchange)</text>
+            <!-- CloudAMQP -->
+            <rect x="225" y="145" width="140" height="80" rx="6" fill="#b45309" fill-opacity="0.04" stroke="#b45309" stroke-width="1.5"/>
+            <text x="295" y="185" font-family="Inter" font-size="12" font-weight="bold" fill="#b45309" text-anchor="middle">CloudAMQP Broker</text>
+            <text x="295" y="200" font-family="Inter" font-size="9" fill="#b45309" text-anchor="middle">(RabbitMQ TLS)</text>
             
             <!-- Agent A -->
-            <rect x="430" y="60" width="140" height="50" rx="6" fill="#1e293b" fill-opacity="0.03" stroke="#1e293b" stroke-width="1.5"/>
-            <text x="500" y="85" font-family="Inter" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Agent A (Planner)</text>
+            <rect x="435" y="60" width="140" height="50" rx="6" fill="#1e293b" fill-opacity="0.02" stroke="#1e293b" stroke-width="1.5"/>
+            <text x="505" y="85" font-family="Inter" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Agent A (Planner)</text>
             
             <!-- Agent B -->
-            <rect x="430" y="150" width="140" height="50" rx="6" fill="#1e293b" fill-opacity="0.03" stroke="#1e293b" stroke-width="1.5"/>
-            <text x="500" y="175" font-family="Inter" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Agent B (Executor)</text>
+            <rect x="435" y="150" width="140" height="50" rx="6" fill="#1e293b" fill-opacity="0.02" stroke="#1e293b" stroke-width="1.5"/>
+            <text x="505" y="175" font-family="Inter" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Agent B (Executor)</text>
             
             <!-- Agent C -->
-            <rect x="430" y="240" width="140" height="50" rx="6" fill="#1e293b" fill-opacity="0.03" stroke="#1e293b" stroke-width="1.5"/>
-            <text x="500" y="265" font-family="Inter" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Agent C (Monitor)</text>
+            <rect x="435" y="240" width="140" height="50" rx="6" fill="#1e293b" fill-opacity="0.02" stroke="#1e293b" stroke-width="1.5"/>
+            <text x="505" y="265" font-family="Inter" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Agent C (Monitor)</text>
             
-            <!-- Communication Lines -->
-            <!-- UI <--> API -->
-            <path d="M85 140 V210" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="3 3"/>
+            <!-- Lines -->
+            <path d="M90 140 V210" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="3 3"/>
+            <path d="M155 240 H205 V195 H225" stroke="#0f766e" stroke-width="1.5"/>
+            <path d="M435 85 H385 V160 H365" stroke="#64748b" stroke-width="1.5"/>
+            <path d="M435 175 H365" stroke="#64748b" stroke-width="1.5"/>
+            <path d="M435 265 H385 V200 H365" stroke="#64748b" stroke-width="1.5"/>
             
-            <!-- API <--> Broker -->
-            <path d="M150 240 H200 V195 H220" stroke="#0f766e" stroke-width="1.5"/>
-            
-            <!-- Agent A <--> Broker -->
-            <path d="M430 85 H380 V160 H360" stroke="#64748b" stroke-width="1.5"/>
-            
-            <!-- Agent B <--> Broker -->
-            <path d="M430 175 H360" stroke="#64748b" stroke-width="1.5"/>
-            
-            <!-- Agent C <--> Broker -->
-            <path d="M430 265 H380 V200 H360" stroke="#64748b" stroke-width="1.5"/>
-            
-            <!-- Markers -->
             <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
@@ -306,208 +321,135 @@
         </svg>
     </div>
 
+    <div class="info-box">
+        <h4>Multivariate Machine Learning Advantage</h4>
+        <p>
+            Standard monitors flag warnings when a single vital (e.g., heart rate > 100) crosses a limit. The Isolation Forest algorithm trains on a multi-dimensional metric space, drawing isolation boundaries. This catches clinical emergencies (like early sepsis, where systolic BP falls while heart rate elevates) before any single vital crosses clinical thresholds.
+        </p>
+    </div>
+
     <div class="page-break"></div>
 
-    <h2>3. Message Schema and JSON Format</h2>
+    <h2>3. Message Contract & JSON Schema</h2>
     <p>
-        Reliable distributed coordination requires a strict contract for all data packets. Every message transmitted over RabbitMQ is wrapped inside a standardized <code>MessageEnvelope</code> JSON schema, validating the envelope metadata, target routing keys, and specific agent payloads.
+        The system relies on a rigid envelope structure to guarantee reliable deserialization. All RabbitMQ payloads are encapsulated within a <code>MessageEnvelope</code> containing transaction tracing (Correlation ID), priority levels, and routing metadata:
     </p>
 
-    <h3>JSON Message Format (Pydantic / Pika Schema)</h3>
     <pre>{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "MessageEnvelope",
-  "type": "object",
-  "properties": {
-    "message_id": { "type": "string", "format": "uuid" },
-    "sender_id": { "type": "string", "enum": ["api", "agent-a", "agent-b", "agent-c", "test-client"] },
-    "receiver_id": { "type": "string" },
-    "message_type": { 
-      "type": "string", 
-      "enum": ["TASK_ASSIGNMENT", "TASK_ACCEPTED", "TASK_PROGRESS", "TASK_COMPLETED", "TASK_FAILED", "HEARTBEAT", "MONITOR_ALERT"] 
-    },
-    "timestamp": { "type": "string", "format": "date-time" },
-    "correlation_id": { "type": "string" },
-    "priority": { "type": "integer", "minimum": 0, "maximum": 5 },
-    "routing_key": { "type": "string" },
-    "payload": { "type": "object" },
-    "metadata": {
-      "type": "object",
-      "properties": {
-        "retry_count": { "type": "integer", "default": 0 },
-        "max_retries": { "type": "integer", "default": 3 },
-        "routing_path": { "type": "array", "items": { "type": "string" } }
-      },
-      "required": ["retry_count", "max_retries", "routing_path"]
+  <span class="j-key">"message_id"</span>: <span class="j-val">"8e32ea70-e67c-473d-8182-d249f7e8a931"</span>,
+  <span class="j-key">"sender_id"</span>: <span class="j-val">"agent-a"</span>,
+  <span class="j-key">"receiver_id"</span>: <span class="j-val">"agent-b"</span>,
+  <span class="j-key">"message_type"</span>: <span class="j-val">"TASK_ASSIGNMENT"</span>,
+  <span class="j-key">"timestamp"</span>: <span class="j-val">"2026-06-26T07:18:40.125Z"</span>,
+  <span class="j-key">"correlation_id"</span>: <span class="j-val">"session-42b781"</span>,
+  <span class="j-key">"priority"</span>: <span class="j-num">2</span>,
+  <span class="j-key">"routing_key"</span>: <span class="j-val">"task.agent_b"</span>,
+  <span class="j-key">"payload"</span>: {
+    <span class="j-key">"task_id"</span>: <span class="j-val">"task-df38190"</span>,
+    <span class="j-key">"parameters"</span>: {
+      <span class="j-key">"total_records"</span>: <span class="j-num">7000</span>,
+      <span class="j-key">"contamination"</span>: <span class="j-num">0.05</span>,
+      <span class="j-key">"random_seed"</span>: <span class="j-num">42</span>
     }
   },
-  "required": [
-    "message_id", "sender_id", "receiver_id", "message_type", 
-    "timestamp", "correlation_id", "priority", "routing_key", "payload", "metadata"
-  ]
-}</pre>
-
-    <h3>Sample Task Assignment Payload</h3>
-    <p>
-        When the Planner dispatching a new analysis run, it encapsulates configuration inputs within the envelope:
-    </p>
-    <pre>{
-  "message_id": "8e32ea70-e67c-473d-8182-d249f7e8a931",
-  "sender_id": "agent-a",
-  "receiver_id": "agent-b",
-  "message_type": "TASK_ASSIGNMENT",
-  "timestamp": "2026-06-26T07:18:40.125Z",
-  "correlation_id": "session-42b781",
-  "priority": 2,
-  "routing_key": "task.agent_b",
-  "payload": {
-    "task_id": "task-df38190",
-    "parameters": {
-      "total_records": 7000,
-      "contamination": 0.05,
-      "random_seed": 42
-    }
-  },
-  "metadata": {
-    "retry_count": 0,
-    "max_retries": 3,
-    "routing_path": ["agent-a"]
+  <span class="j-key">"metadata"</span>: {
+    <span class="j-key">"retry_count"</span>: <span class="j-num">0</span>,
+    <span class="j-key">"max_retries"</span>: <span class="j-num">3</span>,
+    <span class="j-key">"routing_path"</span>: [<span class="j-val">"agent-a"</span>]
   }
 }</pre>
 
-    <div class="page-break"></div>
-
-    <h2>4. Communication and State Routing Flow</h2>
+    <h2>4. Communication Flow & Routing Keys</h2>
     <p>
-        The lifecycle of a single vital analysis run follows a strict asynchronous pipeline across the broker queues. This ensures that even if individual processing nodes experience high load or go offline, state recovery is guaranteed.
+        The messaging lifecycle utilizes the direct exchange <code>anomaly_exchange</code>. By binding queues to specific routing keys, we coordinate steps asynchronously:
     </p>
 
     <table>
         <thead>
             <tr>
                 <th>Step</th>
-                <th>Sender</th>
-                <th>Receiver</th>
-                <th>Routing Key</th>
-                <th>Status Code</th>
-                <th>Description</th>
+                <th>Source</th>
+                <th>Recipient</th>
+                <th>Routing Key / Channel</th>
+                <th>Message Type</th>
+                <th>Visual Result</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>1</td>
-                <td>Clinical UI</td>
+                <td>Web UI</td>
                 <td>FastAPI</td>
-                <td>HTTP POST</td>
-                <td>DISPATCHED</td>
-                <td>User triggers scan from Web Dashboard.</td>
+                <td>HTTP POST <code>/tasks/analyze</code></td>
+                <td>-</td>
+                <td>User enters label, launches scan.</td>
             </tr>
             <tr>
                 <td>2</td>
-                <td>FastAPI</td>
-                <td>Agent A</td>
-                <td>In-Memory Call</td>
-                <td>DISPATCHED</td>
-                <td>API submits task to local Planner wrapper.</td>
-            </tr>
-            <tr>
-                <td>3</td>
                 <td>Agent A</td>
                 <td>Broker</td>
                 <td><code>task.agent_b</code></td>
                 <td>TASK_ASSIGNMENT</td>
-                <td>Planner publishes parameters to Agent B queue.</td>
+                <td>Planner allocates configuration.</td>
             </tr>
             <tr>
-                <td>4</td>
+                <td>3</td>
                 <td>Agent B</td>
                 <td>Agent A</td>
                 <td><code>feedback</code></td>
                 <td>TASK_ACCEPTED</td>
-                <td>Executor acknowledges message consumption.</td>
+                <td>Executor logs consumption.</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Agent B</td>
+                <td>Agent C</td>
+                <td><code>report</code></td>
+                <td>TASK_PROGRESS (25% - 75%)</td>
+                <td>Sends simulation and training states.</td>
             </tr>
             <tr>
                 <td>5</td>
                 <td>Agent B</td>
                 <td>Agent C</td>
                 <td><code>report</code></td>
-                <td>TASK_PROGRESS (25%)</td>
-                <td>Simulates dataset and updates Monitor.</td>
+                <td>TASK_PROGRESS (100%)</td>
+                <td>Compiles anomaly report variables.</td>
             </tr>
             <tr>
                 <td>6</td>
                 <td>Agent B</td>
-                <td>Agent C</td>
-                <td><code>report</code></td>
-                <td>TASK_PROGRESS (50%)</td>
-                <td>Trains Isolation Forest model.</td>
-            </tr>
-            <tr>
-                <td>7</td>
-                <td>Agent B</td>
-                <td>Agent C</td>
-                <td><code>report</code></td>
-                <td>TASK_PROGRESS (75%)</td>
-                <td>Runs predictions and flags anomalous indices.</td>
-            </tr>
-            <tr>
-                <td>8</td>
-                <td>Agent B</td>
-                <td>Agent C</td>
-                <td><code>report</code></td>
-                <td>TASK_PROGRESS (100%)</td>
-                <td>Generates telemetry report object.</td>
-            </tr>
-            <tr>
-                <td>9</td>
-                <td>Agent B</td>
                 <td>Agent C & A</td>
                 <td><code>report</code> & <code>feedback</code></td>
                 <td>TASK_COMPLETED</td>
-                <td>Pushes finished report details to Monitor and Planner.</td>
+                <td>Pushes finished report details.</td>
             </tr>
             <tr>
-                <td>10</td>
+                <td>7</td>
                 <td>Agent C</td>
                 <td>Agent A</td>
                 <td><code>feedback</code></td>
                 <td>MONITOR_ALERT</td>
-                <td>Evaluates severity alarms and alerts Planner.</td>
+                <td>Verifies severity alarms (normal/critical).</td>
             </tr>
         </tbody>
     </table>
 
-    <div class="highlight-box">
-        <h4>Heartbeat Supervisor Loop</h4>
-        <p>
-            Separate from the task pipeline, all active nodes publish a periodic <code>HEARTBEAT</code> packet to the <code>report</code> queue. Agent C consumes these packets and maintains an internal timestamp dictionary. If any agent misses heartbeats for longer than 90 seconds, the Monitor publishes a <code>MONITOR_ALERT</code> with severity <code>HIGH</code> to escalate infrastructure issues.
-        </p>
+    <div class="info-box">
+        <h4>Heartbeat & Dead-Letter Queue (DLQ) Resilience</h4>
+        <ul>
+            <li><strong>Heartbeats</strong>: Agents publish tick messages to the broker every 30s. Agent C monitors timestamps and escalates offline alerts if any node is silent for > 90s.</li>
+            <li><strong>DLQ Redirection</strong>: If Agent B fails to process a task due to code errors, the Pika envelope increments <code>retry_count</code>. After 3 retries, the message is routed to the dead-letter exchange (DLX) for diagnostic capture.</li>
+        </ul>
     </div>
 
     <h2>5. AI Assistance Disclosure Statement</h2>
     <p>
-        This section provides a clear audit of how artificial intelligence was utilized across the lifecycle of this project. Work was divided logically between ideation phases and execution phases.
-    </p>
-
-    <h3>Ideation & Architecture Design (Claude)</h3>
-    <p>
-        The first phase of development involved conceptual layout and technology choices. <strong>Claude</strong> was used during this ideation phase to:
+        A clear boundary was maintained between ideation and coding phases:
     </p>
     <ul>
-        <li>Compare message broker options (selecting RabbitMQ over Redis due to native AMQP routing key and dead-letter queue (DLQ) support).</li>
-        <li>Select the machine learning approach (choosing Isolation Forest over K-Means to ensure robust multi-dimensional distance evaluation).</li>
-        <li>Draft the initial Master Plan, outlining file paths, supervisord orchestrations, and Pydantic communication schemas.</li>
-    </ul>
-
-    <h3>Implementation, Debugging & Front-End Design (Gemini / Antigravity)</h3>
-    <p>
-        The Master Plan was handed over to <strong>Gemini (Antigravity/Nebula)</strong> to execute the full software build and deployment phase:
-    </p>
-    <ul>
-        <li><strong>Infrastructure Integration</strong>: Overrode default Pika connection configurations to support CloudAMQP TLS string formats, bypassing SSL chain validation errors in Render container environments.</li>
-        <li><strong>Thread Safety</strong>: Redesigned the heartbeat systems of all three agents to use separate connections and channels, preventing socket frame corruption under concurrent execution.</li>
-        <li><strong>FastAPI & Front-End Serving</strong>: Configured local static mounts and built the entire user-facing clinical interface (HTML, CSS, JS) matching the DESIGN.md specifications.</li>
-        <li><strong>Test Engineering</strong>: Solved test flakiness in the broker integration tests by introducing dynamic temporary test queues to isolate test runs from live container consumers.</li>
+        <li><strong>Ideation Phase (Claude)</strong>: Claude was consulted for initial tech choices. It provided architecture comparisons that led to selecting RabbitMQ (TLS direct routing) and supervisord container management, framing the master plan.</li>
+        <li><strong>Development Phase (Gemini / Antigravity)</strong>: Gemini performed all coding and debugging. This included overriding Pika's SSL verification settings for CloudAMQP compatibility, separating heartbeat channels to prevent socket corruption, building the light-themed CSS clinical dashboard, and solving test harness flakiness using isolated temporary queues.</li>
     </ul>
 
 </body>
