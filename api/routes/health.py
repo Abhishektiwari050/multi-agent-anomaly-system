@@ -11,15 +11,24 @@ def health_check():
     port = int(os.getenv("RABBITMQ_PORT", 5672))
     user = os.getenv("RABBITMQ_USER", "guest")
     password = os.getenv("RABBITMQ_PASS", "guest")
-    
-    credentials = pika.PlainCredentials(user, password)
-    params = pika.ConnectionParameters(
-        host=host,
-        port=port,
-        credentials=credentials,
-        connection_attempts=1,
-        retry_delay=1
-    )
+    url = os.getenv("RABBITMQ_URL")
+    if url:
+        params = pika.URLParameters(url)
+        if url.startswith("amqps://"):
+            import ssl
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            params.ssl_options = pika.SSLOptions(context)
+    else:
+        credentials = pika.PlainCredentials(user, password)
+        params = pika.ConnectionParameters(
+            host=host,
+            port=port,
+            credentials=credentials,
+            connection_attempts=1,
+            retry_delay=1
+        )
     
     rabbitmq_status = "disconnected"
     try:
