@@ -67,6 +67,10 @@ graph TD
 *   **Executor (Agent B)**: The compute-heavy engine. Generates synthetic vital datasets, trains an Isolation Forest model to partition multivariate outliers, and constructs telemetry diagnostics.
 *   **Monitor (Agent C)**: Watchdog service. Audits execution progress, registers process heartbeats from active agents, and raises critical severity alarms if any node disconnects.
 
+<p align="center">
+  <img src="docs/images/progress.png" alt="AURA Multi-Agent Progress Coordination Stepper" width="70%">
+</p>
+
 ---
 
 ## 🚀 Key Features
