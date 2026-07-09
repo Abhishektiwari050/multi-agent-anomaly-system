@@ -4,11 +4,7 @@ import pandas as pd
 
 
 def build_report(
-    task_id: str,
-    df: pd.DataFrame,
-    predictions: List[int],
-    scores: List[float],
-    detector
+    task_id: str, df: pd.DataFrame, predictions: List[int], scores: List[float], detector
 ) -> Dict[str, Any]:
     N = len(df)
 
@@ -39,12 +35,14 @@ def build_report(
     top_records = []
     for idx, score in top_5:
         vitals_row = df.iloc[idx].to_dict()
-        top_records.append({
-            "record_id": int(idx),
-            "score": float(score),
-            "severity": detector.classify_severity(score),
-            "vitals": vitals_row
-        })
+        top_records.append(
+            {
+                "record_id": int(idx),
+                "score": float(score),
+                "severity": detector.classify_severity(score),
+                "vitals": vitals_row,
+            }
+        )
 
     return {
         "task_id": task_id,
@@ -54,5 +52,5 @@ def build_report(
         "medium_severity": medium_count,
         "low_severity": low_count,
         "avg_anomaly_score": avg_score,
-        "top_anomalous_records": top_records
+        "top_anomalous_records": top_records,
     }

@@ -8,6 +8,7 @@ from shared.logger import setup_logger
 
 logger = setup_logger("task-tracker")
 
+
 class TaskTracker:
     def __init__(self, state_file_path: Optional[str] = None):
         self.state_file_path = state_file_path or os.getenv("STATE_FILE_PATH", "tasks.json")
@@ -46,13 +47,15 @@ class TaskTracker:
         self._load()
         with self.lock:
             task = self.tasks.get(task_id, {})
-            task.update({
-                "task_id": task_id,
-                "status": status,
-                "progress_pct": progress_pct,
-                "current_sub_task": current_sub_task,
-                "last_updated": datetime.now(timezone.utc).isoformat()
-            })
+            task.update(
+                {
+                    "task_id": task_id,
+                    "status": status,
+                    "progress_pct": progress_pct,
+                    "current_sub_task": current_sub_task,
+                    "last_updated": datetime.now(timezone.utc).isoformat(),
+                }
+            )
             # Add extra key-value pairs (like result summary or execution time)
             for k, v in kwargs.items():
                 task[k] = v
@@ -68,4 +71,3 @@ class TaskTracker:
         self._load()
         with self.lock:
             return self.tasks
-

@@ -12,6 +12,7 @@ from shared.rabbitmq_client import RabbitMQBaseClient
 
 load_dotenv()
 
+
 # Skip integration tests if RabbitMQ is not running
 def is_rabbitmq_available():
     url = os.getenv("RABBITMQ_URL")
@@ -33,10 +34,9 @@ def is_rabbitmq_available():
     except Exception:
         return False
 
-pytestmark = pytest.mark.skipif(
-    not is_rabbitmq_available(),
-    reason="RabbitMQ broker is not running or not reachable."
-)
+
+pytestmark = pytest.mark.skipif(not is_rabbitmq_available(), reason="RabbitMQ broker is not running or not reachable.")
+
 
 class RabbitMQIntegrationClient(RabbitMQBaseClient):
     def __init__(self):
@@ -46,6 +46,7 @@ class RabbitMQIntegrationClient(RabbitMQBaseClient):
     def handle_message(self, channel, method, properties, body):
         self.received_messages.append(body)
         channel.basic_ack(method.delivery_tag)
+
 
 def test_publish_and_consume():
     client = RabbitMQIntegrationClient()
@@ -71,9 +72,9 @@ def test_publish_and_consume():
             "description": "Integration Test",
             "parameters": {},
             "deadline": datetime.now(timezone.utc).isoformat(),
-            "sub_tasks": []
+            "sub_tasks": [],
         },
-        metadata=Metadata()
+        metadata=Metadata(),
     )
 
     # Publish message
@@ -94,4 +95,3 @@ def test_publish_and_consume():
     client.channel.queue_unbind(exchange=EXCHANGE_NAME, queue=test_queue, routing_key=ROUTING_KEY_TASK_AGENT_B)
     client.channel.queue_delete(queue=test_queue)
     client.disconnect()
-

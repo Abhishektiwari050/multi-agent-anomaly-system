@@ -14,15 +14,18 @@ def mock_planner():
     planner = MagicMock()
     return planner
 
+
 @pytest.fixture(autouse=True)
 def override_dependencies(mock_planner):
     app.dependency_overrides[get_planner] = lambda: mock_planner
     yield
     app.dependency_overrides.clear()
 
+
 @pytest.fixture
 def client():
     return TestClient(app)
+
 
 def test_create_task(mock_planner, client):
     # Setup mock return values for plan_task
@@ -34,7 +37,7 @@ def test_create_task(mock_planner, client):
         "contamination": 0.05,
         "random_seed": 42,
         "deadline_minutes": 10,
-        "description": "API Test Run"
+        "description": "API Test Run",
     }
     response = client.post("/tasks/analyze", json=payload)
     assert response.status_code == 200
@@ -45,23 +48,15 @@ def test_create_task(mock_planner, client):
     assert data["correlation_id"] == "session-api-test-id"
 
     mock_planner.plan_task.assert_called_once_with(
-        total_records=1000,
-        contamination=0.05,
-        random_seed=42,
-        deadline_minutes=10,
-        description="API Test Run"
+        total_records=1000, contamination=0.05, random_seed=42, deadline_minutes=10, description="API Test Run"
     )
+
 
 def test_get_task_status(client):
     # Setup test file in state tracker
     test_file = "./test_tasks_api.json"
     tracker = TaskTracker(state_file_path=test_file)
-    tracker.update_task(
-        task_id="task-api-test",
-        status="IN_PROGRESS",
-        progress_pct=50,
-        current_sub_task="train"
-    )
+    tracker.update_task(task_id="task-api-test", status="IN_PROGRESS", progress_pct=50, current_sub_task="train")
 
     # Force the API to use the test file
     with patch.dict(os.environ, {"STATE_FILE_PATH": test_file}):
@@ -81,7 +76,8 @@ def test_get_task_status(client):
     if os.path.exists(test_file):
         os.remove(test_file)
 
-@patch('pika.BlockingConnection')
+
+@patch("pika.BlockingConnection")
 def test_health_endpoint(mock_conn, client):
     # Mock successful connection
     mock_instance = MagicMock()
@@ -93,21 +89,12 @@ def test_health_endpoint(mock_conn, client):
     assert response.json()["status"] == "ok"
     assert response.json()["rabbitmq"] == "connected"
 
+
 def test_list_tasks(client):
     test_file = "./test_tasks_list.json"
     tracker = TaskTracker(state_file_path=test_file)
-    tracker.update_task(
-        task_id="task-api-test-1",
-        status="IN_PROGRESS",
-        progress_pct=50,
-        current_sub_task="train"
-    )
-    tracker.update_task(
-        task_id="task-api-test-2",
-        status="COMPLETED",
-        progress_pct=100,
-        current_sub_task="report"
-    )
+    tracker.update_task(task_id="task-api-test-1", status="IN_PROGRESS", progress_pct=50, current_sub_task="train")
+    tracker.update_task(task_id="task-api-test-2", status="COMPLETED", progress_pct=100, current_sub_task="report")
 
     with patch.dict(os.environ, {"STATE_FILE_PATH": test_file}):
         response = client.get("/tasks")
@@ -120,4 +107,3 @@ def test_list_tasks(client):
 
     if os.path.exists(test_file):
         os.remove(test_file)
-

@@ -16,6 +16,7 @@ ROUTING_KEY_FEEDBACK = "feedback.agent-a"
 ROUTING_KEY_HEARTBEAT = "heartbeat.agent"
 ROUTING_KEY_TASK_AGENT_B = "task.agent-b"
 
+
 class HeartbeatThread(threading.Thread):
     def __init__(self, agent_id: str):
         super().__init__()
@@ -38,12 +39,7 @@ class HeartbeatThread(threading.Thread):
                 cpu_pct = round(random.uniform(1.0, 15.0), 2)
                 mem_mb = round(random.uniform(50.0, 200.0), 2)
 
-                payload = {
-                    "agent_id": self.agent_id,
-                    "status": "HEALTHY",
-                    "cpu_pct": cpu_pct,
-                    "mem_mb": mem_mb
-                }
+                payload = {"agent_id": self.agent_id, "status": "HEALTHY", "cpu_pct": cpu_pct, "mem_mb": mem_mb}
 
                 envelope = MessageEnvelope(
                     message_id=str(uuid.uuid4()),
@@ -54,7 +50,7 @@ class HeartbeatThread(threading.Thread):
                     correlation_id="heartbeat-corr",
                     priority=3,
                     routing_key=ROUTING_KEY_HEARTBEAT,
-                    payload=payload
+                    payload=payload,
                 )
 
                 self.client.publish(ROUTING_KEY_HEARTBEAT, envelope)
@@ -84,7 +80,9 @@ class Executor(RabbitMQBaseClient):
 
         # Check max retries
         if envelope.metadata.retry_count >= envelope.metadata.max_retries:
-            logger.error(f"Max retries ({envelope.metadata.max_retries}) exceeded for task {envelope.payload.get('task_id')}. Routing to DLQ.")
+            logger.error(
+                f"Max retries ({envelope.metadata.max_retries}) exceeded for task {envelope.payload.get('task_id')}. Routing to DLQ."
+            )
             self._publish_task_failed(envelope, f"Max retries exceeded: {envelope.metadata.retry_count}")
             channel.basic_nack(method.delivery_tag, requeue=False)
             return
@@ -114,9 +112,11 @@ class Executor(RabbitMQBaseClient):
                 current_sub_task="generate_data",
                 records_processed=total_records,
                 total_records=total_records,
-                anomalies_so_far=0
+                anomalies_so_far=0,
             )
-            self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
+            self._publish_status(
+                envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump()
+            )
 
             # Step 2: train (50%)
             logger.info(f"Task {task_id}: Training Isolation Forest model...")
@@ -125,7 +125,9 @@ class Executor(RabbitMQBaseClient):
 
             progress_payload.progress_pct = 50
             progress_payload.current_sub_task = "train"
-            self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
+            self._publish_status(
+                envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump()
+            )
 
             # Step 3: predict (75%)
             logger.info(f"Task {task_id}: Running anomaly classification...")
@@ -134,7 +136,9 @@ class Executor(RabbitMQBaseClient):
             progress_payload.progress_pct = 75
             progress_payload.current_sub_task = "predict"
             progress_payload.anomalies_so_far = anomalies_detected
-            self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
+            self._publish_status(
+                envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump()
+            )
 
             # Step 4: build_report (100%)
             logger.info(f"Task {task_id}: Compiling telemetry report...")
@@ -142,19 +146,23 @@ class Executor(RabbitMQBaseClient):
 
             progress_payload.progress_pct = 100
             progress_payload.current_sub_task = "report"
-            self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
+            self._publish_status(
+                envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump()
+            )
 
             # Publish TASK_COMPLETED
             execution_time = int((time.time() - start_time) * 1000)
             completed_payload = TaskCompletedPayload(
-                task_id=task_id,
-                result_summary=report_data,
-                execution_time_ms=execution_time
+                task_id=task_id, result_summary=report_data, execution_time_ms=execution_time
             )
 
             # Publish completion to both Agent C and Agent A
-            self._publish_status(envelope, MessageType.TASK_COMPLETED, ROUTING_KEY_REPORT, "agent-c", completed_payload.model_dump())
-            self._publish_status(envelope, MessageType.TASK_COMPLETED, ROUTING_KEY_FEEDBACK, "agent-a", completed_payload.model_dump())
+            self._publish_status(
+                envelope, MessageType.TASK_COMPLETED, ROUTING_KEY_REPORT, "agent-c", completed_payload.model_dump()
+            )
+            self._publish_status(
+                envelope, MessageType.TASK_COMPLETED, ROUTING_KEY_FEEDBACK, "agent-a", completed_payload.model_dump()
+            )
 
             logger.info(f"Task {task_id} successfully completed in {execution_time}ms.")
             channel.basic_ack(method.delivery_tag)
@@ -165,7 +173,9 @@ class Executor(RabbitMQBaseClient):
             envelope.metadata.retry_count += 1
 
             if envelope.metadata.retry_count >= envelope.metadata.max_retries:
-                logger.error(f"Max retries exceeded on exception for task {envelope.payload.get('task_id')}. Sending to DLQ.")
+                logger.error(
+                    f"Max retries exceeded on exception for task {envelope.payload.get('task_id')}. Sending to DLQ."
+                )
                 self._publish_task_failed(envelope, str(e))
                 channel.basic_nack(method.delivery_tag, requeue=False)
             else:
@@ -173,7 +183,9 @@ class Executor(RabbitMQBaseClient):
                 self.publish(ROUTING_KEY_TASK_AGENT_B, envelope)
                 channel.basic_ack(method.delivery_tag)
 
-    def _publish_status(self, original_env: MessageEnvelope, msg_type: MessageType, routing_key: str, receiver_id: str, payload: dict):
+    def _publish_status(
+        self, original_env: MessageEnvelope, msg_type: MessageType, routing_key: str, receiver_id: str, payload: dict
+    ):
         env = MessageEnvelope(
             message_id=str(uuid.uuid4()),
             sender_id="agent-b",
@@ -184,16 +196,12 @@ class Executor(RabbitMQBaseClient):
             priority=original_env.priority,
             routing_key=routing_key,
             payload=payload,
-            metadata=original_env.metadata
+            metadata=original_env.metadata,
         )
         self.publish(routing_key, env)
 
     def _publish_task_failed(self, original_env: MessageEnvelope, error_msg: str):
-        failed_payload = {
-            "task_id": original_env.payload.get("task_id"),
-            "status": "FAILED",
-            "error": error_msg
-        }
+        failed_payload = {"task_id": original_env.payload.get("task_id"), "status": "FAILED", "error": error_msg}
         self._publish_status(original_env, MessageType.TASK_FAILED, ROUTING_KEY_REPORT, "agent-c", failed_payload)
         self._publish_status(original_env, MessageType.TASK_FAILED, ROUTING_KEY_FEEDBACK, "agent-a", failed_payload)
 

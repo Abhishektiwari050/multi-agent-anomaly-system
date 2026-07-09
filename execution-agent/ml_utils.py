@@ -8,7 +8,9 @@ from sklearn.preprocessing import StandardScaler
 
 
 # Data Sim Simulation Logic
-def generate_patient_vitals(N: int = 1000, contamination: float = 0.05, seed: int = 42) -> Tuple[pd.DataFrame, List[int]]:
+def generate_patient_vitals(
+    N: int = 1000, contamination: float = 0.05, seed: int = 42
+) -> Tuple[pd.DataFrame, List[int]]:
     np.random.seed(seed)
 
     # Generate normal vital bases
@@ -29,15 +31,17 @@ def generate_patient_vitals(N: int = 1000, contamination: float = 0.05, seed: in
     respiratory_rate = np.clip(respiratory_rate, 8, 25)
     glucose_level = np.clip(glucose_level, 50, 180)
 
-    df = pd.DataFrame({
-        "heart_rate": heart_rate,
-        "systolic_bp": systolic_bp,
-        "diastolic_bp": diastolic_bp,
-        "temperature": temperature,
-        "oxygen_saturation": oxygen_saturation,
-        "respiratory_rate": respiratory_rate,
-        "glucose_level": glucose_level
-    })
+    df = pd.DataFrame(
+        {
+            "heart_rate": heart_rate,
+            "systolic_bp": systolic_bp,
+            "diastolic_bp": diastolic_bp,
+            "temperature": temperature,
+            "oxygen_saturation": oxygen_saturation,
+            "respiratory_rate": respiratory_rate,
+            "glucose_level": glucose_level,
+        }
+    )
 
     # Inject multivariate anomalies
     n_anomalies = int(N * contamination)
@@ -58,6 +62,7 @@ def generate_patient_vitals(N: int = 1000, contamination: float = 0.05, seed: in
 
     return df, sorted(anomaly_indices)
 
+
 # Isolation Forest ML Engine
 class AnomalyDetector:
     def __init__(self, contamination: float = 0.05, seed: int = 42):
@@ -65,10 +70,7 @@ class AnomalyDetector:
         self.seed = seed
         self.scaler = StandardScaler()
         self.model = IsolationForest(
-            n_estimators=200,
-            contamination=self.contamination,
-            random_state=self.seed,
-            n_jobs=-1
+            n_estimators=200, contamination=self.contamination, random_state=self.seed, n_jobs=-1
         )
         # Severity thresholds
         self.high_threshold = float(os.getenv("HIGH_SEVERITY_THRESHOLD", "-0.15"))
@@ -76,8 +78,13 @@ class AnomalyDetector:
 
     def train_and_predict(self, df: pd.DataFrame) -> Tuple[List[int], List[float]]:
         feature_cols = [
-            "heart_rate", "systolic_bp", "diastolic_bp",
-            "temperature", "oxygen_saturation", "respiratory_rate", "glucose_level"
+            "heart_rate",
+            "systolic_bp",
+            "diastolic_bp",
+            "temperature",
+            "oxygen_saturation",
+            "respiratory_rate",
+            "glucose_level",
         ]
         X = df[feature_cols].values
         X_scaled = self.scaler.fit_transform(X)
@@ -96,13 +103,10 @@ class AnomalyDetector:
         else:
             return "LOW"
 
+
 # Telemetry Report Formatting
 def build_report(
-    task_id: str,
-    df: pd.DataFrame,
-    predictions: List[int],
-    scores: List[float],
-    detector: AnomalyDetector
+    task_id: str, df: pd.DataFrame, predictions: List[int], scores: List[float], detector: AnomalyDetector
 ) -> Dict[str, Any]:
     N = len(df)
 
@@ -132,12 +136,14 @@ def build_report(
     top_records = []
     for idx, score in top_5:
         vitals_row = df.iloc[idx].to_dict()
-        top_records.append({
-            "record_id": int(idx),
-            "score": float(score),
-            "severity": detector.classify_severity(score),
-            "vitals": vitals_row
-        })
+        top_records.append(
+            {
+                "record_id": int(idx),
+                "score": float(score),
+                "severity": detector.classify_severity(score),
+                "vitals": vitals_row,
+            }
+        )
 
     return {
         "task_id": task_id,
@@ -147,5 +153,5 @@ def build_report(
         "medium_severity": medium_count,
         "low_severity": low_count,
         "avg_anomaly_score": avg_score,
-        "top_anomalous_records": top_records
+        "top_anomalous_records": top_records,
     }

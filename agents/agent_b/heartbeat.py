@@ -12,6 +12,7 @@ from shared.rabbitmq_client import RabbitMQBaseClient
 
 logger = setup_logger("agent-b-heartbeat")
 
+
 class HeartbeatThread(threading.Thread):
     def __init__(self, agent_id: str):
         super().__init__()
@@ -35,11 +36,7 @@ class HeartbeatThread(threading.Thread):
                 mem_mb = round(random.uniform(50.0, 200.0), 2)
 
                 payload = HeartbeatPayload(
-                    agent_id=self.agent_id,
-                    status="HEALTHY",
-                    current_task=None,
-                    cpu_pct=cpu_pct,
-                    mem_mb=mem_mb
+                    agent_id=self.agent_id, status="HEALTHY", current_task=None, cpu_pct=cpu_pct, mem_mb=mem_mb
                 )
 
                 envelope = MessageEnvelope(
@@ -51,7 +48,7 @@ class HeartbeatThread(threading.Thread):
                     correlation_id="heartbeat-corr",
                     priority=3,
                     routing_key=ROUTING_KEY_HEARTBEAT,
-                    payload=payload.model_dump()
+                    payload=payload.model_dump(),
                 )
 
                 self.client.publish(ROUTING_KEY_HEARTBEAT, envelope)

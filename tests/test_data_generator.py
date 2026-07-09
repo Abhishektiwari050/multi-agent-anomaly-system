@@ -10,11 +10,17 @@ def test_generate_patient_vitals_shape():
     assert len(anomaly_indices) == 50  # 5% of 1000
 
     expected_cols = [
-        "heart_rate", "systolic_bp", "diastolic_bp",
-        "temperature", "oxygen_saturation", "respiratory_rate", "glucose_level"
+        "heart_rate",
+        "systolic_bp",
+        "diastolic_bp",
+        "temperature",
+        "oxygen_saturation",
+        "respiratory_rate",
+        "glucose_level",
     ]
     for col in expected_cols:
         assert col in df.columns
+
 
 def test_generate_patient_vitals_ranges():
     df, _ = generate_patient_vitals(N=100, contamination=0.0, seed=42)
@@ -23,6 +29,7 @@ def test_generate_patient_vitals_ranges():
     assert df["heart_rate"].max() <= 120
     assert df["oxygen_saturation"].min() >= 90
     assert df["temperature"].min() >= 35.0
+
 
 def test_generate_patient_vitals_anomalies():
     df, anomaly_indices = generate_patient_vitals(N=100, contamination=0.10, seed=42)
@@ -34,6 +41,7 @@ def test_generate_patient_vitals_anomalies():
     # Injected anomalies are shifted high or low
     # Specifically, heart rate offset is +50 to +80
     assert anomaly_df["heart_rate"].mean() > df["heart_rate"].mean()
+
 
 def test_generate_patient_vitals_reproducibility():
     df1, idx1 = generate_patient_vitals(N=100, contamination=0.05, seed=10)

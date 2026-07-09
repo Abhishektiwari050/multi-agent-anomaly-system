@@ -12,10 +12,11 @@ from shared.message_schema import MessageEnvelope, MessageType
 
 @pytest.fixture
 def mock_rabbitmq_client():
-    with patch('shared.rabbitmq_client.RabbitMQBaseClient') as mock_base:
+    with patch("shared.rabbitmq_client.RabbitMQBaseClient") as mock_base:
         mock_instance = MagicMock()
         mock_base.return_value = mock_instance
         yield mock_instance
+
 
 def test_planner_creates_task(mock_rabbitmq_client):
     planner = Planner()
@@ -23,11 +24,7 @@ def test_planner_creates_task(mock_rabbitmq_client):
     planner.publish = MagicMock()
 
     task_id, correlation_id = planner.plan_task(
-        total_records=1000,
-        contamination=0.05,
-        random_seed=42,
-        deadline_minutes=10,
-        description="Test vitals run"
+        total_records=1000, contamination=0.05, random_seed=42, deadline_minutes=10, description="Test vitals run"
     )
 
     assert task_id is not None
@@ -40,6 +37,7 @@ def test_planner_creates_task(mock_rabbitmq_client):
     assert routing_key == "task.agent-b"
     assert envelope.message_type == MessageType.TASK_ASSIGNMENT
     assert envelope.payload["parameters"]["total_records"] == 1000
+
 
 def test_executor_handles_task(mock_rabbitmq_client):
     executor = Executor()
@@ -61,8 +59,8 @@ def test_executor_handles_task(mock_rabbitmq_client):
             "description": "Test Executor Run",
             "parameters": {"total_records": 100, "contamination": 0.05, "random_seed": 42},
             "deadline": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
-            "sub_tasks": ["generate_data", "train", "predict", "report"]
-        }
+            "sub_tasks": ["generate_data", "train", "predict", "report"],
+        },
     )
 
     mock_channel = MagicMock()
@@ -84,6 +82,7 @@ def test_executor_handles_task(mock_rabbitmq_client):
     assert MessageType.TASK_ACCEPTED in published_types
     assert MessageType.TASK_PROGRESS in published_types
     assert MessageType.TASK_COMPLETED in published_types
+
 
 def test_monitor_tracks_task(mock_rabbitmq_client):
     # Setup temporary file path for state tracker to avoid docker volumes locally
@@ -108,8 +107,8 @@ def test_monitor_tracks_task(mock_rabbitmq_client):
             "current_sub_task": "train",
             "records_processed": 50,
             "total_records": 100,
-            "anomalies_so_far": 2
-        }
+            "anomalies_so_far": 2,
+        },
     )
 
     mock_channel = MagicMock()
@@ -140,10 +139,10 @@ def test_monitor_tracks_task(mock_rabbitmq_client):
                 "medium_severity": 3,
                 "low_severity": 1,
                 "avg_anomaly_score": -0.18,
-                "top_anomalous_records": []
+                "top_anomalous_records": [],
             },
-            "execution_time_ms": 120
-        }
+            "execution_time_ms": 120,
+        },
     )
 
     monitor.handle_message(mock_channel, MagicMock(delivery_tag=2), MagicMock(), completed_env.model_dump_json())
@@ -158,5 +157,6 @@ def test_monitor_tracks_task(mock_rabbitmq_client):
 
     # Clean up test tracker file
     import os
+
     if os.path.exists("./test_tasks.json"):
         os.remove("./test_tasks.json")

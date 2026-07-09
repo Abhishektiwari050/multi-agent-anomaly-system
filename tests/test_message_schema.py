@@ -13,10 +13,12 @@ def test_metadata_default_values():
     assert meta.max_retries == 3
     assert meta.ttl_seconds == 3600
 
+
 def test_metadata_validation_retry_count():
     # retry_count should not exceed max_retries
     with pytest.raises(ValidationError):
         Metadata(retry_count=4, max_retries=3)
+
 
 def test_task_assignment_payload():
     payload_data = {
@@ -25,11 +27,12 @@ def test_task_assignment_payload():
         "description": "Test Task",
         "parameters": {"total_records": 100},
         "deadline": datetime.now(timezone.utc).isoformat(),
-        "sub_tasks": ["generate_data", "train", "predict", "report"]
+        "sub_tasks": ["generate_data", "train", "predict", "report"],
     }
     payload = TaskAssignmentPayload(**payload_data)
     assert payload.task_id == "task-123"
     assert payload.parameters["total_records"] == 100
+
 
 def test_message_envelope_validation():
     # Valid envelope
@@ -48,13 +51,14 @@ def test_message_envelope_validation():
             "description": "Test Task",
             "parameters": {"total_records": 100},
             "deadline": datetime.now(timezone.utc).isoformat(),
-            "sub_tasks": ["generate_data"]
+            "sub_tasks": ["generate_data"],
         },
-        "metadata": Metadata().model_dump()
+        "metadata": Metadata().model_dump(),
     }
     envelope = MessageEnvelope(**envelope_data)
     assert envelope.message_id == "msg-123"
     assert envelope.message_type == MessageType.TASK_ASSIGNMENT
+
 
 def test_message_envelope_invalid_type():
     envelope_data = {
@@ -67,7 +71,7 @@ def test_message_envelope_invalid_type():
         "priority": 2,
         "routing_key": "task.agent-b",
         "payload": {},
-        "metadata": Metadata().model_dump()
+        "metadata": Metadata().model_dump(),
     }
     with pytest.raises(ValidationError):
         MessageEnvelope(**envelope_data)

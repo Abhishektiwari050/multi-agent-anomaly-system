@@ -14,7 +14,7 @@ from api.routes import health, tasks
 app = FastAPI(
     title="Multi-Agent Anomaly Detection API",
     description="REST API to coordinate task assignments and track execution telemetry.",
-    version="1.0"
+    version="1.0",
 )
 
 # CORS config
@@ -34,11 +34,12 @@ app.include_router(health.router)
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 static_dir = os.path.join(project_root, "static")
 
+
 # Serve index.html at root
 @app.get("/")
 def read_root():
     return FileResponse(os.path.join(static_dir, "index.html"))
 
+
 # Serve other static files
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
-

@@ -23,15 +23,17 @@ def generate_patient_vitals(N: int = 1000, contamination: float = 0.05, seed: in
     respiratory_rate = np.clip(respiratory_rate, 8, 25)
     glucose_level = np.clip(glucose_level, 50, 180)
 
-    df = pd.DataFrame({
-        "heart_rate": heart_rate,
-        "systolic_bp": systolic_bp,
-        "diastolic_bp": diastolic_bp,
-        "temperature": temperature,
-        "oxygen_saturation": oxygen_saturation,
-        "respiratory_rate": respiratory_rate,
-        "glucose_level": glucose_level
-    })
+    df = pd.DataFrame(
+        {
+            "heart_rate": heart_rate,
+            "systolic_bp": systolic_bp,
+            "diastolic_bp": diastolic_bp,
+            "temperature": temperature,
+            "oxygen_saturation": oxygen_saturation,
+            "respiratory_rate": respiratory_rate,
+            "glucose_level": glucose_level,
+        }
+    )
 
     # 2. Inject anomalies
     n_anomalies = int(N * contamination)

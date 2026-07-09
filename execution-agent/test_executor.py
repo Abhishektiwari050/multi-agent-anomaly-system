@@ -16,6 +16,7 @@ def test_generate_patient_vitals():
     assert "oxygen_saturation" in df.columns
     assert "temperature" in df.columns
 
+
 def test_anomaly_detector_training():
     N = 200
     df, _ = generate_patient_vitals(N=N, contamination=0.05, seed=42)
@@ -29,12 +30,14 @@ def test_anomaly_detector_training():
     anomalies_count = sum(1 for p in predictions if p == -1)
     assert anomalies_count == 10  # 5% of 200
 
+
 def test_classify_severity():
     detector = AnomalyDetector()
     # High threshold = -0.15, Medium = -0.08
     assert detector.classify_severity(-0.20) == "HIGH"
     assert detector.classify_severity(-0.10) == "MEDIUM"
     assert detector.classify_severity(0.05) == "LOW"
+
 
 def test_build_report():
     N = 100
@@ -52,7 +55,8 @@ def test_build_report():
     assert "low_severity" in report
     assert len(report["top_anomalous_records"]) <= 5
 
-@patch('pika.BlockingConnection')
+
+@patch("pika.BlockingConnection")
 def test_executor_task_handling(mock_conn):
     # Mock connection and channel
     mock_channel = MagicMock()
@@ -77,22 +81,19 @@ def test_executor_task_handling(mock_conn):
         routing_key="task.agent-b",
         payload={
             "task_id": "task-test-123",
-            "parameters": {
-                "total_records": 100,
-                "contamination": 0.05,
-                "random_seed": 42
-            }
+            "parameters": {"total_records": 100, "contamination": 0.05, "random_seed": 42},
         },
-        metadata=Metadata()
+        metadata=Metadata(),
     )
     body = envelope.model_dump_json()
 
     # Mock publish to collect sent status messages
     published_keys = []
+
     def mock_publish(routing_key, envelope_out):
         published_keys.append((routing_key, envelope_out.message_type))
 
-    with patch.object(executor, 'publish', side_effect=mock_publish):
+    with patch.object(executor, "publish", side_effect=mock_publish):
         mock_method = MagicMock()
         mock_method.delivery_tag = 1
 

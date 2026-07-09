@@ -16,12 +16,7 @@ def setup_logger(agent_name: str):
         return f"{{time:YYYY-MM-DD HH:mm:ss.SSS}} | {{level: <8}} | {agent} | {{message}}\n"
 
     # Console layout
-    logger.add(
-        sys.stdout,
-        format=console_formatter,
-        colorize=True,
-        level="INFO"
-    )
+    logger.add(sys.stdout, format=console_formatter, colorize=True, level="INFO")
 
     # File logging directory setup
     log_dir = os.getenv("LOG_DIR", "./logs")
@@ -32,7 +27,7 @@ def setup_logger(agent_name: str):
         format=file_formatter,
         rotation="10 MB",
         retention="7 days",
-        level="DEBUG"
+        level="DEBUG",
     )
 
     return logger.bind(agent=agent_name)

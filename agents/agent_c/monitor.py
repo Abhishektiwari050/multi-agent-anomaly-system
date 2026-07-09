@@ -13,6 +13,7 @@ from shared.rabbitmq_client import RabbitMQBaseClient
 
 logger = setup_logger("agent-c")
 
+
 class Monitor(RabbitMQBaseClient):
     def __init__(self, tracker: TaskTracker = None):
         super().__init__("agent-c")
@@ -65,7 +66,7 @@ class Monitor(RabbitMQBaseClient):
             current_sub_task=sub_task,
             records_processed=payload.get("records_processed", 0),
             total_records=payload.get("total_records", 0),
-            anomalies_so_far=payload.get("anomalies_so_far", 0)
+            anomalies_so_far=payload.get("anomalies_so_far", 0),
         )
 
     def _handle_completion(self, envelope: MessageEnvelope):
@@ -81,7 +82,7 @@ class Monitor(RabbitMQBaseClient):
             progress_pct=100,
             current_sub_task="report",
             result_summary=summary,
-            execution_time_ms=execution_time
+            execution_time_ms=execution_time,
         )
 
         # Analyze severity levels
@@ -94,7 +95,7 @@ class Monitor(RabbitMQBaseClient):
                 alert_type="HIGH_SEVERITY_ANOMALIES",
                 severity="HIGH",
                 message=f"Critically high count of severe clinical anomalies ({high_severity_count}) detected in task run.",
-                action_required="ESCALATE_TO_CLINICAL_TEAM"
+                action_required="ESCALATE_TO_CLINICAL_TEAM",
             )
         elif high_severity_count >= 2:
             self._publish_alert(
@@ -102,7 +103,7 @@ class Monitor(RabbitMQBaseClient):
                 alert_type="HIGH_SEVERITY_ANOMALIES",
                 severity="MEDIUM",
                 message=f"Moderate count of severe clinical anomalies ({high_severity_count}) detected.",
-                action_required="FLAG_FOR_REVIEW"
+                action_required="FLAG_FOR_REVIEW",
             )
         else:
             self._publish_alert(
@@ -110,7 +111,7 @@ class Monitor(RabbitMQBaseClient):
                 alert_type="HIGH_SEVERITY_ANOMALIES",
                 severity="LOW",
                 message="Anomaly scan complete. Results are within acceptable ranges.",
-                action_required="LOG_AND_ARCHIVE"
+                action_required="LOG_AND_ARCHIVE",
             )
 
     def _handle_failure(self, envelope: MessageEnvelope):
@@ -120,20 +121,12 @@ class Monitor(RabbitMQBaseClient):
 
         logger.error(f"Task {task_id} failed: {error_msg}")
         self.tracker.update_task(
-            task_id=task_id,
-            status="FAILED",
-            progress_pct=0,
-            current_sub_task="failed",
-            error=error_msg
+            task_id=task_id, status="FAILED", progress_pct=0, current_sub_task="failed", error=error_msg
         )
 
     def _publish_alert(self, task_id: str, alert_type: str, severity: str, message: str, action_required: str):
         payload = MonitorAlertPayload(
-            task_id=task_id,
-            alert_type=alert_type,
-            severity=severity,
-            message=message,
-            action_required=action_required
+            task_id=task_id, alert_type=alert_type, severity=severity, message=message, action_required=action_required
         )
 
         envelope = MessageEnvelope(
@@ -145,7 +138,7 @@ class Monitor(RabbitMQBaseClient):
             correlation_id=f"alert-{uuid.uuid4()}",
             priority=1 if severity == "HIGH" else 2,
             routing_key=ROUTING_KEY_FEEDBACK,
-            payload=payload.model_dump()
+            payload=payload.model_dump(),
         )
 
         self.publish(ROUTING_KEY_FEEDBACK, envelope)
@@ -159,13 +152,15 @@ class Monitor(RabbitMQBaseClient):
                 for agent_id, last_seen in list(self.heartbeat_registry.items()):
                     silence = (now - last_seen).total_seconds()
                     if silence > self.heartbeat_timeout:
-                        logger.critical(f"Agent offline detected: {agent_id}! Silence duration: {silence:.0f}s (Threshold: {self.heartbeat_timeout}s)")
+                        logger.critical(
+                            f"Agent offline detected: {agent_id}! Silence duration: {silence:.0f}s (Threshold: {self.heartbeat_timeout}s)"
+                        )
                         self._publish_alert(
                             task_id="system",
                             alert_type="AGENT_OFFLINE",
                             severity="HIGH",
                             message=f"Agent '{agent_id}' has missed heartbeats and is offline.",
-                            action_required="CHECK_AGENT_HEALTH"
+                            action_required="CHECK_AGENT_HEALTH",
                         )
                         # Remove from registry so we don't alert repeatedly
                         self.heartbeat_registry.pop(agent_id, None)

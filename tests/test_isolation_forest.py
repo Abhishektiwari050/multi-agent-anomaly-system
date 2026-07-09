@@ -16,6 +16,7 @@ def test_anomaly_detector_training():
     unique_labels = set(predictions)
     assert -1 in unique_labels or 1 in unique_labels
 
+
 def test_anomaly_detector_recall():
     df, anomaly_indices = generate_patient_vitals(N=1000, contamination=0.05, seed=42)
 
@@ -29,6 +30,7 @@ def test_anomaly_detector_recall():
     # Model must detect at least 80% of injected anomalies
     assert recall >= 0.80
 
+
 def test_classify_severity():
     detector = AnomalyDetector(contamination=0.05, seed=42)
 
@@ -36,6 +38,7 @@ def test_classify_severity():
     assert detector.classify_severity(-0.20) == "HIGH"
     assert detector.classify_severity(-0.10) == "MEDIUM"
     assert detector.classify_severity(0.0) == "LOW"
+
 
 def test_report_builder():
     df, anomaly_indices = generate_patient_vitals(N=100, contamination=0.05, seed=42)

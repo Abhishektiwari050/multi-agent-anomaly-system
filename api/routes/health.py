@@ -6,6 +6,7 @@ from fastapi import APIRouter
 
 router = APIRouter(prefix="/health", tags=["health"])
 
+
 @router.get("")
 def health_check():
     host = os.getenv("RABBITMQ_HOST", "localhost")
@@ -17,6 +18,7 @@ def health_check():
         params = pika.URLParameters(url)
         if url.startswith("amqps://"):
             import ssl
+
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
@@ -24,11 +26,7 @@ def health_check():
     else:
         credentials = pika.PlainCredentials(user, password)
         params = pika.ConnectionParameters(
-            host=host,
-            port=port,
-            credentials=credentials,
-            connection_attempts=1,
-            retry_delay=1
+            host=host, port=port, credentials=credentials, connection_attempts=1, retry_delay=1
         )
 
     rabbitmq_status = "disconnected"
@@ -43,5 +41,5 @@ def health_check():
     return {
         "status": "ok" if rabbitmq_status == "connected" else "degraded",
         "rabbitmq": rabbitmq_status,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

@@ -14,6 +14,7 @@ from shared.logger import setup_logger
 
 logger = setup_logger("agent-b-main")
 
+
 def main():
     logger.info("Initializing Agent B (Executor)...")
     executor = Executor()
@@ -28,6 +29,7 @@ def main():
     except Exception as e:
         logger.critical(f"Agent B consumer failed: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

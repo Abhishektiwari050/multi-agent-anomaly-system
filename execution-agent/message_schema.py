@@ -14,10 +14,12 @@ class MessageType(str, Enum):
     HEARTBEAT = "HEARTBEAT"
     MONITOR_ALERT = "MONITOR_ALERT"
 
+
 class Metadata(BaseModel):
     retry_count: int = Field(default=0)
     max_retries: int = Field(default=3)
     routing_path: List[str] = Field(default_factory=list)
+
 
 class MessageEnvelope(BaseModel):
     message_id: str
@@ -31,6 +33,7 @@ class MessageEnvelope(BaseModel):
     payload: Dict[str, Any]
     metadata: Metadata = Field(default_factory=Metadata)
 
+
 class TaskAssignmentPayload(BaseModel):
     task_id: str
     task_type: str = "ANOMALY_DETECTION"
@@ -38,6 +41,7 @@ class TaskAssignmentPayload(BaseModel):
     parameters: Dict[str, Any] = Field(default_factory=dict)
     deadline: datetime
     sub_tasks: List[str] = Field(default_factory=list)
+
 
 class TaskProgressPayload(BaseModel):
     task_id: str
@@ -47,6 +51,7 @@ class TaskProgressPayload(BaseModel):
     total_records: int
     anomalies_so_far: int
     status: str = "IN_PROGRESS"
+
 
 class TaskCompletedPayload(BaseModel):
     task_id: str

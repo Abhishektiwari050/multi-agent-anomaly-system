@@ -24,6 +24,7 @@ QUEUE_BINDINGS = {
     QUEUE_AGENT_A_FEEDBACK: ["feedback.#"],
 }
 
+
 class RabbitMQBaseClient:
     def __init__(self, client_name: str):
         self.client_name = client_name
@@ -45,11 +46,7 @@ class RabbitMQBaseClient:
             logger.info(f"[{self.client_name}] Using host/port/user credentials for connection parameters.")
             credentials = pika.PlainCredentials(self.user, self.password)
             self.params = pika.ConnectionParameters(
-                host=self.host,
-                port=self.port,
-                credentials=credentials,
-                heartbeat=60,
-                blocked_connection_timeout=300
+                host=self.host, port=self.port, credentials=credentials, heartbeat=60, blocked_connection_timeout=300
             )
         self.connection: Optional[pika.BlockingConnection] = None
         self.channel: Optional[pika.adapters.blocking_connection.BlockingChannel] = None
@@ -57,64 +54,43 @@ class RabbitMQBaseClient:
     def connect(self, max_attempts: int = 10):
         for attempt in range(1, max_attempts + 1):
             try:
-                logger.info(f"[{self.client_name}] Connecting to RabbitMQ (attempt {attempt}/{max_attempts}) at {self.params.host}:{self.params.port}")
+                logger.info(
+                    f"[{self.client_name}] Connecting to RabbitMQ (attempt {attempt}/{max_attempts}) at {self.params.host}:{self.params.port}"
+                )
                 self.connection = pika.BlockingConnection(self.params)
                 self.channel = self.connection.channel()
                 self._declare_topology()
                 logger.info(f"[{self.client_name}] Connected to RabbitMQ.")
                 return
             except pika.exceptions.AMQPConnectionError as e:
-                wait = min(2 ** attempt, 60)
+                wait = min(2**attempt, 60)
                 logger.warning(f"[{self.client_name}] Connection failed. Retrying in {wait}s. Error: {e}")
                 time.sleep(wait)
         raise RuntimeError(f"[{self.client_name}] Could not connect to RabbitMQ after {max_attempts} attempts.")
 
     def _declare_topology(self):
         # 1. Declare Topic Exchange
-        self.channel.exchange_declare(
-            exchange=EXCHANGE_NAME,
-            exchange_type="topic",
-            durable=True
-        )
+        self.channel.exchange_declare(exchange=EXCHANGE_NAME, exchange_type="topic", durable=True)
 
         # 2. Declare Dead Letter Exchange (DLX)
-        self.channel.exchange_declare(
-            exchange=DLX_NAME,
-            exchange_type="direct",
-            durable=True
-        )
+        self.channel.exchange_declare(exchange=DLX_NAME, exchange_type="direct", durable=True)
 
         # 3. Declare Dead Letter Queue (DLQ) and bind to DLX
-        self.channel.queue_declare(
-            queue=QUEUE_DLQ,
-            durable=True
-        )
-        self.channel.queue_bind(
-            exchange=DLX_NAME,
-            queue=QUEUE_DLQ,
-            routing_key=ROUTING_KEY_DLQ
-        )
+        self.channel.queue_declare(queue=QUEUE_DLQ, durable=True)
+        self.channel.queue_bind(exchange=DLX_NAME, queue=QUEUE_DLQ, routing_key=ROUTING_KEY_DLQ)
 
         # 4. Declare standard queues with DLQ configuration
         queue_args = {
             "x-dead-letter-exchange": DLX_NAME,
             "x-dead-letter-routing-key": ROUTING_KEY_DLQ,
             "x-message-ttl": 3600000,  # 1 hour
-            "x-max-priority": 3
+            "x-max-priority": 3,
         }
 
         for queue, patterns in QUEUE_BINDINGS.items():
-            self.channel.queue_declare(
-                queue=queue,
-                durable=True,
-                arguments=queue_args
-            )
+            self.channel.queue_declare(queue=queue, durable=True, arguments=queue_args)
             for pattern in patterns:
-                self.channel.queue_bind(
-                    exchange=EXCHANGE_NAME,
-                    queue=queue,
-                    routing_key=pattern
-                )
+                self.channel.queue_bind(exchange=EXCHANGE_NAME, queue=queue, routing_key=pattern)
 
     def publish(self, routing_key: str, envelope: MessageEnvelope):
         if not self.channel or self.channel.is_closed:
@@ -125,14 +101,9 @@ class RabbitMQBaseClient:
             delivery_mode=2,  # make message persistent
             priority=envelope.priority,
             correlation_id=envelope.correlation_id,
-            content_type="application/json"
+            content_type="application/json",
         )
-        self.channel.basic_publish(
-            exchange=EXCHANGE_NAME,
-            routing_key=routing_key,
-            body=body,
-            properties=properties
-        )
+        self.channel.basic_publish(exchange=EXCHANGE_NAME, routing_key=routing_key, body=body, properties=properties)
         logger.debug(f"[{self.client_name}] Published to '{routing_key}': {envelope.message_id}")
 
     def start_consuming(self, queue_name: str):
@@ -140,10 +111,7 @@ class RabbitMQBaseClient:
             self.connect()
 
         self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(
-            queue=queue_name,
-            on_message_callback=self._wrap_handle_message
-        )
+        self.channel.basic_consume(queue=queue_name, on_message_callback=self._wrap_handle_message)
         logger.info(f"[{self.client_name}] Started consuming from queue '{queue_name}'")
         try:
             self.channel.start_consuming()

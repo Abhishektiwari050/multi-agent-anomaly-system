@@ -9,17 +9,13 @@ from shared.rabbitmq_client import RabbitMQBaseClient
 
 logger = setup_logger("agent-a")
 
+
 class Planner(RabbitMQBaseClient):
     def __init__(self):
         super().__init__("agent-a")
 
     def plan_task(
-        self,
-        total_records: int,
-        contamination: float,
-        random_seed: int,
-        deadline_minutes: int,
-        description: str
+        self, total_records: int, contamination: float, random_seed: int, deadline_minutes: int, description: str
     ) -> Tuple[str, str]:
         task_id = f"task-{uuid.uuid4()}"
         correlation_id = f"session-{uuid.uuid4()}"
@@ -29,13 +25,9 @@ class Planner(RabbitMQBaseClient):
             task_id=task_id,
             task_type="ANOMALY_DETECTION",
             description=description,
-            parameters={
-                "total_records": total_records,
-                "contamination": contamination,
-                "random_seed": random_seed
-            },
+            parameters={"total_records": total_records, "contamination": contamination, "random_seed": random_seed},
             deadline=deadline,
-            sub_tasks=["generate_data", "train", "predict", "report"]
+            sub_tasks=["generate_data", "train", "predict", "report"],
         )
 
         envelope = MessageEnvelope(
@@ -47,7 +39,7 @@ class Planner(RabbitMQBaseClient):
             correlation_id=correlation_id,
             priority=2,
             routing_key=ROUTING_KEY_TASK_AGENT_B,
-            payload=payload.model_dump()
+            payload=payload.model_dump(),
         )
 
         self.publish(ROUTING_KEY_TASK_AGENT_B, envelope)
