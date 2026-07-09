@@ -28,6 +28,10 @@ This system implements an advanced clinical telemetry monitoring solution levera
 
 Designed for scalability, high availability, and clinical precision, the platform coordinates planner, executor, and watchdog monitors asynchronously using AMQP event queues, wrapping compute nodes with robust dead-letter recovery and active process orchestration.
 
+<p align="center">
+  <img src="docs/images/welcome.png" alt="AURA Diagnostics Getting Started" width="70%">
+</p>
+
 ---
 
 ## 🛠️ System Architecture
