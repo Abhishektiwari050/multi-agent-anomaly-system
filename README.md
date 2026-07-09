@@ -165,7 +165,7 @@ Our automated quality pipeline runs on Github Actions, verifying styling, types,
 *   **Static Typing**: `mypy --ignore-missing-imports shared api agents execution-agent`
 *   **Test Runner**: `pytest --cov=shared --cov=api --cov=agents --cov-report=term-missing`
 
-To run testing assertions locally:
+To run the automated integration test suite locally (all 26 test states covering API requests, agent simulations, and RabbitMQ exchanges pass successfully):
 ```bash
 pytest
 ```

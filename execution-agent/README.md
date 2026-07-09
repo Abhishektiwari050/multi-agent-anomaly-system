@@ -99,7 +99,7 @@ The agent expects the following values in the `TASK_ASSIGNMENT` payload:
     ```
 
 ### Running Tests
-Run unit assertions and mock connection handlers:
+Verify the standalone logic locally (all 5 modules covering data simulation, ML boundaries, and queue publishers pass successfully):
 ```bash
 pytest test_executor.py
 ```
