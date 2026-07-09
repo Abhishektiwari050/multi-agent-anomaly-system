@@ -1,13 +1,14 @@
-import pytest
 import os
-import json
 import time
-import pika
-from dotenv import load_dotenv
 from datetime import datetime, timezone
+
+import pika
+import pytest
+from dotenv import load_dotenv
+
+from shared.message_schema import MessageEnvelope, MessageType, Metadata
+from shared.queue_config import EXCHANGE_NAME, ROUTING_KEY_TASK_AGENT_B
 from shared.rabbitmq_client import RabbitMQBaseClient
-from shared.message_schema import MessageEnvelope, Metadata, MessageType
-from shared.queue_config import QUEUE_AGENT_B_TASKS, ROUTING_KEY_TASK_AGENT_B, EXCHANGE_NAME
 
 load_dotenv()
 
@@ -49,12 +50,12 @@ class RabbitMQIntegrationClient(RabbitMQBaseClient):
 def test_publish_and_consume():
     client = RabbitMQIntegrationClient()
     client.connect()
-    
+
     # Setup a temporary test queue to capture the routed message without interference from active live consumers
     test_queue = f"test-queue-{int(time.time())}"
     client.channel.queue_declare(queue=test_queue, durable=False, auto_delete=True)
     client.channel.queue_bind(exchange=EXCHANGE_NAME, queue=test_queue, routing_key=ROUTING_KEY_TASK_AGENT_B)
-    
+
     envelope = MessageEnvelope(
         message_id="msg-test",
         sender_id="test-client",
@@ -74,20 +75,20 @@ def test_publish_and_consume():
         },
         metadata=Metadata()
     )
-    
+
     # Publish message
     client.publish(ROUTING_KEY_TASK_AGENT_B, envelope)
     time.sleep(0.5)
-    
+
     # Let's get the message using basic_get to avoid blocking forever
     method_frame, header_frame, body = client.channel.basic_get(queue=test_queue, auto_ack=False)
     assert method_frame is not None
-    
+
     # Parse and verify
     received_env = MessageEnvelope.model_validate_json(body)
     assert received_env.message_id == "msg-test"
     assert received_env.correlation_id == "corr-test"
-    
+
     # Clean up by acknowledging the retrieved message and closing
     client.channel.basic_ack(method_frame.delivery_tag)
     client.channel.queue_unbind(exchange=EXCHANGE_NAME, queue=test_queue, routing_key=ROUTING_KEY_TASK_AGENT_B)

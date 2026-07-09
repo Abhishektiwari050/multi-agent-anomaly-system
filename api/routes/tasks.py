@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
+from typing import Any, Dict
+
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from typing import Dict, Any
+
 from agents.agent_a.planner import Planner
 from agents.agent_c.task_tracker import TaskTracker
 

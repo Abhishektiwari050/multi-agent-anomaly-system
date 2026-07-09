@@ -1,14 +1,14 @@
-import pytest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
-from datetime import datetime, timezone, timedelta
-from shared.message_schema import (
-    MessageEnvelope, MessageType, TaskAssignmentPayload,
-    TaskProgressPayload, TaskCompletedPayload, MonitorAlertPayload
-)
+
+import pytest
+
 from agents.agent_a.planner import Planner
 from agents.agent_b.executor import Executor
 from agents.agent_c.monitor import Monitor
 from agents.agent_c.task_tracker import TaskTracker
+from shared.message_schema import MessageEnvelope, MessageType
+
 
 @pytest.fixture
 def mock_rabbitmq_client():
@@ -21,7 +21,7 @@ def test_planner_creates_task(mock_rabbitmq_client):
     planner = Planner()
     # Mock routing/publish
     planner.publish = MagicMock()
-    
+
     task_id, correlation_id = planner.plan_task(
         total_records=1000,
         contamination=0.05,
@@ -29,11 +29,11 @@ def test_planner_creates_task(mock_rabbitmq_client):
         deadline_minutes=10,
         description="Test vitals run"
     )
-    
+
     assert task_id is not None
     assert correlation_id is not None
     assert planner.publish.call_count == 1
-    
+
     # Check that it published TASK_ASSIGNMENT
     args, kwargs = planner.publish.call_args
     routing_key, envelope = args
@@ -44,7 +44,7 @@ def test_planner_creates_task(mock_rabbitmq_client):
 def test_executor_handles_task(mock_rabbitmq_client):
     executor = Executor()
     executor.publish = MagicMock()
-    
+
     # Create a task assignment envelope
     assignment = MessageEnvelope(
         message_id="msg-1",
@@ -64,17 +64,17 @@ def test_executor_handles_task(mock_rabbitmq_client):
             "sub_tasks": ["generate_data", "train", "predict", "report"]
         }
     )
-    
+
     mock_channel = MagicMock()
     mock_method = MagicMock(delivery_tag=1)
     mock_properties = MagicMock()
-    
+
     # Execute
     executor.handle_message(mock_channel, mock_method, mock_properties, assignment.model_dump_json())
-    
+
     # Check that channel.basic_ack was called
     mock_channel.basic_ack.assert_called_once_with(1)
-    
+
     # Verify publications: ACCEPTED, PROGRESS (25, 50, 75, 100), COMPLETED
     # Should have published at least:
     # 1. ACCEPTED
@@ -90,7 +90,7 @@ def test_monitor_tracks_task(mock_rabbitmq_client):
     tracker = TaskTracker(state_file_path="./test_tasks.json")
     monitor = Monitor(tracker=tracker)
     monitor.publish = MagicMock()
-    
+
     # Send Progress message
     progress_env = MessageEnvelope(
         message_id="msg-p",
@@ -111,15 +111,15 @@ def test_monitor_tracks_task(mock_rabbitmq_client):
             "anomalies_so_far": 2
         }
     )
-    
+
     mock_channel = MagicMock()
     monitor.handle_message(mock_channel, MagicMock(delivery_tag=1), MagicMock(), progress_env.model_dump_json())
-    
+
     task_state = tracker.get_task("task-1")
     assert task_state is not None
     assert task_state["status"] == "IN_PROGRESS"
     assert task_state["progress_pct"] == 50
-    
+
     # Send high anomaly completion message to trigger alert
     completed_env = MessageEnvelope(
         message_id="msg-c",
@@ -145,17 +145,17 @@ def test_monitor_tracks_task(mock_rabbitmq_client):
             "execution_time_ms": 120
         }
     )
-    
+
     monitor.handle_message(mock_channel, MagicMock(delivery_tag=2), MagicMock(), completed_env.model_dump_json())
-    
+
     # Task tracker should show COMPLETED
     task_state = tracker.get_task("task-1")
     assert task_state["status"] == "COMPLETED"
-    
+
     # Verify C published a MONITOR_ALERT because high_severity >= 5
     published_types = [call[0][1].message_type for call in monitor.publish.call_args_list]
     assert MessageType.MONITOR_ALERT in published_types
-    
+
     # Clean up test tracker file
     import os
     if os.path.exists("./test_tasks.json"):

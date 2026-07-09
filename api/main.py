@@ -1,14 +1,15 @@
 import os
 import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # Ensure the root project path is in the sys.path for importing shared package
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from api.routes import tasks, health
+from api.routes import health, tasks
 
 app = FastAPI(
     title="Multi-Agent Anomaly Detection API",

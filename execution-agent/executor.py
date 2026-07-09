@@ -1,17 +1,14 @@
-import uuid
-import time
 import os
 import random
 import threading
+import time
+import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any
+
 from loguru import logger
+from message_schema import MessageEnvelope, MessageType, TaskCompletedPayload, TaskProgressPayload
+from ml_utils import AnomalyDetector, build_report, generate_patient_vitals
 from rabbitmq_client import RabbitMQBaseClient
-from message_schema import (
-    MessageEnvelope, MessageType, TaskProgressPayload,
-    TaskCompletedPayload, Metadata
-)
-from ml_utils import generate_patient_vitals, AnomalyDetector, build_report
 
 # Routing keys from architecture design
 ROUTING_KEY_REPORT = "report.task-status"
@@ -40,14 +37,14 @@ class HeartbeatThread(threading.Thread):
             try:
                 cpu_pct = round(random.uniform(1.0, 15.0), 2)
                 mem_mb = round(random.uniform(50.0, 200.0), 2)
-                
+
                 payload = {
                     "agent_id": self.agent_id,
                     "status": "HEALTHY",
                     "cpu_pct": cpu_pct,
                     "mem_mb": mem_mb
                 }
-                
+
                 envelope = MessageEnvelope(
                     message_id=str(uuid.uuid4()),
                     sender_id=self.agent_id,
@@ -59,12 +56,12 @@ class HeartbeatThread(threading.Thread):
                     routing_key=ROUTING_KEY_HEARTBEAT,
                     payload=payload
                 )
-                
+
                 self.client.publish(ROUTING_KEY_HEARTBEAT, envelope)
                 logger.debug(f"Published heartbeat for {self.agent_id}")
             except Exception as e:
                 logger.error(f"Error publishing heartbeat for {self.agent_id}: {e}")
-                
+
             time.sleep(self.interval)
 
     def stop(self):
@@ -96,21 +93,21 @@ class Executor(RabbitMQBaseClient):
             # Publish TASK_ACCEPTED
             self._publish_status(envelope, MessageType.TASK_ACCEPTED, ROUTING_KEY_FEEDBACK, "agent-a", {})
             logger.info(f"Accepted task: {envelope.payload.get('task_id')}")
-            
+
             # Start timer
             start_time = time.time()
-            
+
             # Parse parameters
             task_id = envelope.payload.get("task_id")
             params = envelope.payload.get("parameters", {})
             total_records = params.get("total_records", 1000)
             contamination = params.get("contamination", 0.05)
             seed = params.get("random_seed", 42)
-            
+
             # Step 1: generate_data (25%)
             logger.info(f"Task {task_id}: Generating synthetic vital data...")
             df, anomaly_indices = generate_patient_vitals(N=total_records, contamination=contamination, seed=seed)
-            
+
             progress_payload = TaskProgressPayload(
                 task_id=task_id,
                 progress_pct=25,
@@ -120,33 +117,33 @@ class Executor(RabbitMQBaseClient):
                 anomalies_so_far=0
             )
             self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
-            
+
             # Step 2: train (50%)
             logger.info(f"Task {task_id}: Training Isolation Forest model...")
             detector = AnomalyDetector(contamination=contamination, seed=seed)
             predictions, scores = detector.train_and_predict(df)
-            
+
             progress_payload.progress_pct = 50
             progress_payload.current_sub_task = "train"
             self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
-            
+
             # Step 3: predict (75%)
             logger.info(f"Task {task_id}: Running anomaly classification...")
             anomalies_detected = sum(1 for p in predictions if p == -1)
-            
+
             progress_payload.progress_pct = 75
             progress_payload.current_sub_task = "predict"
             progress_payload.anomalies_so_far = anomalies_detected
             self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
-            
+
             # Step 4: build_report (100%)
             logger.info(f"Task {task_id}: Compiling telemetry report...")
             report_data = build_report(task_id, df, predictions, scores, detector)
-            
+
             progress_payload.progress_pct = 100
             progress_payload.current_sub_task = "report"
             self._publish_status(envelope, MessageType.TASK_PROGRESS, ROUTING_KEY_REPORT, "agent-c", progress_payload.model_dump())
-            
+
             # Publish TASK_COMPLETED
             execution_time = int((time.time() - start_time) * 1000)
             completed_payload = TaskCompletedPayload(
@@ -154,19 +151,19 @@ class Executor(RabbitMQBaseClient):
                 result_summary=report_data,
                 execution_time_ms=execution_time
             )
-            
+
             # Publish completion to both Agent C and Agent A
             self._publish_status(envelope, MessageType.TASK_COMPLETED, ROUTING_KEY_REPORT, "agent-c", completed_payload.model_dump())
             self._publish_status(envelope, MessageType.TASK_COMPLETED, ROUTING_KEY_FEEDBACK, "agent-a", completed_payload.model_dump())
-            
+
             logger.info(f"Task {task_id} successfully completed in {execution_time}ms.")
             channel.basic_ack(method.delivery_tag)
-            
+
         except Exception as e:
             logger.exception(f"Error executing task {envelope.payload.get('task_id')}: {e}")
             # Increment retry count
             envelope.metadata.retry_count += 1
-            
+
             if envelope.metadata.retry_count >= envelope.metadata.max_retries:
                 logger.error(f"Max retries exceeded on exception for task {envelope.payload.get('task_id')}. Sending to DLQ.")
                 self._publish_task_failed(envelope, str(e))

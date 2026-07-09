@@ -1,6 +1,7 @@
 import os
-import pika
 from datetime import datetime, timezone
+
+import pika
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/health", tags=["health"])
@@ -29,7 +30,7 @@ def health_check():
             connection_attempts=1,
             retry_delay=1
         )
-    
+
     rabbitmq_status = "disconnected"
     try:
         connection = pika.BlockingConnection(params)
@@ -38,7 +39,7 @@ def health_check():
             connection.close()
     except Exception:
         pass
-        
+
     return {
         "status": "ok" if rabbitmq_status == "connected" else "degraded",
         "rabbitmq": rabbitmq_status,

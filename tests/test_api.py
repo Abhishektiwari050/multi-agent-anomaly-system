@@ -1,11 +1,13 @@
-import pytest
 import os
-import json
-from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
+from agents.agent_c.task_tracker import TaskTracker
 from api.main import app
 from api.routes.tasks import get_planner
-from agents.agent_c.task_tracker import TaskTracker
+
 
 @pytest.fixture
 def mock_planner():
@@ -25,7 +27,7 @@ def client():
 def test_create_task(mock_planner, client):
     # Setup mock return values for plan_task
     mock_planner.plan_task.return_value = ("task-api-test-id", "session-api-test-id")
-    
+
     # Test POST /tasks/analyze
     payload = {
         "total_records": 1000,
@@ -36,12 +38,12 @@ def test_create_task(mock_planner, client):
     }
     response = client.post("/tasks/analyze", json=payload)
     assert response.status_code == 200
-    
+
     data = response.json()
     assert data["status"] == "DISPATCHED"
     assert data["task_id"] == "task-api-test-id"
     assert data["correlation_id"] == "session-api-test-id"
-    
+
     mock_planner.plan_task.assert_called_once_with(
         total_records=1000,
         contamination=0.05,
@@ -60,21 +62,21 @@ def test_get_task_status(client):
         progress_pct=50,
         current_sub_task="train"
     )
-    
+
     # Force the API to use the test file
     with patch.dict(os.environ, {"STATE_FILE_PATH": test_file}):
         response = client.get("/tasks/task-api-test/status")
         assert response.status_code == 200
-        
+
         data = response.json()
         assert data["task_id"] == "task-api-test"
         assert data["status"] == "IN_PROGRESS"
         assert data["progress_pct"] == 50
-        
+
         # Test non-existent task
         response_404 = client.get("/tasks/non-existent/status")
         assert response_404.status_code == 404
-        
+
     # Clean up
     if os.path.exists(test_file):
         os.remove(test_file)
@@ -85,7 +87,7 @@ def test_health_endpoint(mock_conn, client):
     mock_instance = MagicMock()
     mock_instance.is_open = True
     mock_conn.return_value = mock_instance
-    
+
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"

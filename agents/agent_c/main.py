@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 from dotenv import load_dotenv
 
 # Ensure the root project path is in the sys.path for importing shared package
@@ -7,20 +8,20 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 load_dotenv()
 
-from shared.logger import setup_logger
-from agents.agent_c.monitor import Monitor
 from agents.agent_c.heartbeat import HeartbeatThread
+from agents.agent_c.monitor import Monitor
+from shared.logger import setup_logger
 
 logger = setup_logger("agent-c-main")
 
 def main():
     logger.info("Initializing Agent C (Monitor)...")
     monitor = Monitor()
-    
+
     # Start heartbeat thread
     heartbeat = HeartbeatThread(agent_id="agent-c")
     heartbeat.start()
-    
+
     # Run consumer loops
     try:
         monitor.run_consumer()

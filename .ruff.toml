@@ -1,0 +1,19 @@
+# Ruff configuration file
+# Ref: https://docs.astral.sh/ruff/configuration/
+
+# Same as Black.
+line-length = 120
+
+[lint]
+# Allow module-level imports after sys.path manipulation in entry scripts
+# and allow long lines (leave formatting to ruff format)
+ignore = [
+    "E402",  # Module level import not at top of file
+    "E501"   # Line too long
+]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+]

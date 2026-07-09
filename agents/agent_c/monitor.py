@@ -1,14 +1,15 @@
 import os
-import uuid
-import time
 import threading
+import time
+import uuid
 from datetime import datetime, timezone
 from typing import Dict
-from shared.rabbitmq_client import RabbitMQBaseClient
+
+from agents.agent_c.task_tracker import TaskTracker
+from shared.logger import setup_logger
 from shared.message_schema import MessageEnvelope, MessageType, MonitorAlertPayload
 from shared.queue_config import QUEUE_AGENT_C_REPORTS, ROUTING_KEY_FEEDBACK
-from shared.logger import setup_logger
-from agents.agent_c.task_tracker import TaskTracker
+from shared.rabbitmq_client import RabbitMQBaseClient
 
 logger = setup_logger("agent-c")
 
@@ -18,7 +19,7 @@ class Monitor(RabbitMQBaseClient):
         self.tracker = tracker or TaskTracker()
         self.heartbeat_registry: Dict[str, datetime] = {}
         self.heartbeat_timeout = int(os.getenv("HEARTBEAT_TIMEOUT_SECONDS", "90"))
-        
+
         # Start background heartbeat supervisor
         self.watchdog_thread = threading.Thread(target=self._watch_heartbeats, daemon=True)
         self.watchdog_thread.start()
@@ -27,9 +28,9 @@ class Monitor(RabbitMQBaseClient):
         try:
             envelope = MessageEnvelope.model_validate_json(body)
             msg_type = envelope.message_type
-            
+
             logger.debug(f"Received event {msg_type} from {envelope.sender_id}")
-            
+
             if msg_type == MessageType.HEARTBEAT:
                 self._handle_heartbeat(envelope)
             elif msg_type == MessageType.TASK_PROGRESS:
@@ -38,7 +39,7 @@ class Monitor(RabbitMQBaseClient):
                 self._handle_completion(envelope)
             elif msg_type == MessageType.TASK_FAILED:
                 self._handle_failure(envelope)
-                
+
             channel.basic_ack(method.delivery_tag)
         except Exception as e:
             logger.exception(f"Error processing report message: {e}")
@@ -55,7 +56,7 @@ class Monitor(RabbitMQBaseClient):
         status = payload.get("status", "IN_PROGRESS")
         pct = payload.get("progress_pct", 0)
         sub_task = payload.get("current_sub_task", "")
-        
+
         logger.info(f"Task {task_id} progress update: {pct}% ({sub_task})")
         self.tracker.update_task(
             task_id=task_id,
@@ -72,7 +73,7 @@ class Monitor(RabbitMQBaseClient):
         task_id = payload.get("task_id")
         summary = payload.get("result_summary", {})
         execution_time = payload.get("execution_time_ms", 0)
-        
+
         logger.info(f"Task {task_id} completed in {execution_time}ms.")
         self.tracker.update_task(
             task_id=task_id,
@@ -82,11 +83,11 @@ class Monitor(RabbitMQBaseClient):
             result_summary=summary,
             execution_time_ms=execution_time
         )
-        
+
         # Analyze severity levels
         high_severity_count = summary.get("high_severity", 0)
         logger.info(f"Analyzing anomalies for Task {task_id}. High severity count: {high_severity_count}")
-        
+
         if high_severity_count >= 5:
             self._publish_alert(
                 task_id=task_id,
@@ -116,7 +117,7 @@ class Monitor(RabbitMQBaseClient):
         payload = envelope.payload
         task_id = payload.get("task_id")
         error_msg = payload.get("error", "Unknown error")
-        
+
         logger.error(f"Task {task_id} failed: {error_msg}")
         self.tracker.update_task(
             task_id=task_id,
@@ -134,7 +135,7 @@ class Monitor(RabbitMQBaseClient):
             message=message,
             action_required=action_required
         )
-        
+
         envelope = MessageEnvelope(
             message_id=str(uuid.uuid4()),
             sender_id="agent-c",
@@ -146,7 +147,7 @@ class Monitor(RabbitMQBaseClient):
             routing_key=ROUTING_KEY_FEEDBACK,
             payload=payload.model_dump()
         )
-        
+
         self.publish(ROUTING_KEY_FEEDBACK, envelope)
         logger.info(f"Published alert of severity {severity} for Task {task_id} to Planner feedback.")
 
@@ -170,7 +171,7 @@ class Monitor(RabbitMQBaseClient):
                         self.heartbeat_registry.pop(agent_id, None)
             except Exception as e:
                 logger.error(f"Error checking heartbeat registry: {e}")
-                
+
             time.sleep(15)
 
     def run_consumer(self):

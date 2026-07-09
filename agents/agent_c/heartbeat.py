@@ -1,13 +1,14 @@
-import time
+import os
 import random
 import threading
+import time
 import uuid
-import os
 from datetime import datetime, timezone
-from shared.rabbitmq_client import RabbitMQBaseClient
-from shared.message_schema import MessageEnvelope, HeartbeatPayload, MessageType
-from shared.queue_config import ROUTING_KEY_HEARTBEAT
+
 from shared.logger import setup_logger
+from shared.message_schema import HeartbeatPayload, MessageEnvelope, MessageType
+from shared.queue_config import ROUTING_KEY_HEARTBEAT
+from shared.rabbitmq_client import RabbitMQBaseClient
 
 logger = setup_logger("agent-c-heartbeat")
 
@@ -32,7 +33,7 @@ class HeartbeatThread(threading.Thread):
             try:
                 cpu_pct = round(random.uniform(1.0, 15.0), 2)
                 mem_mb = round(random.uniform(50.0, 200.0), 2)
-                
+
                 payload = HeartbeatPayload(
                     agent_id=self.agent_id,
                     status="HEALTHY",
@@ -40,7 +41,7 @@ class HeartbeatThread(threading.Thread):
                     cpu_pct=cpu_pct,
                     mem_mb=mem_mb
                 )
-                
+
                 envelope = MessageEnvelope(
                     message_id=str(uuid.uuid4()),
                     sender_id=self.agent_id,
@@ -52,12 +53,12 @@ class HeartbeatThread(threading.Thread):
                     routing_key=ROUTING_KEY_HEARTBEAT,
                     payload=payload.model_dump()
                 )
-                
+
                 self.client.publish(ROUTING_KEY_HEARTBEAT, envelope)
                 logger.debug(f"Published heartbeat for {self.agent_id}")
             except Exception as e:
                 logger.error(f"Error publishing heartbeat for {self.agent_id}: {e}")
-                
+
             time.sleep(self.interval)
 
     def stop(self):

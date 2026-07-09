@@ -1,15 +1,12 @@
 import os
 import time
+
 import pika
 from loguru import logger
-from shared.queue_config import (
-    EXCHANGE_NAME,
-    DLX_NAME,
-    ROUTING_KEY_DLQ,
-    QUEUE_DLQ,
-    QUEUE_BINDINGS
-)
+
 from shared.message_schema import MessageEnvelope
+from shared.queue_config import DLX_NAME, EXCHANGE_NAME, QUEUE_BINDINGS, QUEUE_DLQ, ROUTING_KEY_DLQ
+
 
 class RabbitMQBaseClient:
     def __init__(self, client_name: str):
@@ -18,7 +15,7 @@ class RabbitMQBaseClient:
         self.port = int(os.getenv("RABBITMQ_PORT", 5672))
         self.user = os.getenv("RABBITMQ_USER", "guest")
         self.password = os.getenv("RABBITMQ_PASS", "guest")
-        
+
         url = os.getenv("RABBITMQ_URL")
         if url:
             logger.info(f"[{self.client_name}] Using RABBITMQ_URL for connection parameters.")
@@ -63,14 +60,14 @@ class RabbitMQBaseClient:
             exchange_type="topic",
             durable=True
         )
-        
+
         # 2. Declare Dead Letter Exchange (DLX)
         self.channel.exchange_declare(
             exchange=DLX_NAME,
             exchange_type="direct",
             durable=True
         )
-        
+
         # 3. Declare Dead Letter Queue (DLQ) and bind to DLX
         self.channel.queue_declare(
             queue=QUEUE_DLQ,
@@ -81,7 +78,7 @@ class RabbitMQBaseClient:
             queue=QUEUE_DLQ,
             routing_key=ROUTING_KEY_DLQ
         )
-        
+
         # 4. Declare standard queues with DLQ configuration
         queue_args = {
             "x-dead-letter-exchange": DLX_NAME,
@@ -89,7 +86,7 @@ class RabbitMQBaseClient:
             "x-message-ttl": 3600000,  # 1 hour
             "x-max-priority": 3
         }
-        
+
         for queue, patterns in QUEUE_BINDINGS.items():
             self.channel.queue_declare(
                 queue=queue,
@@ -106,7 +103,7 @@ class RabbitMQBaseClient:
     def publish(self, routing_key: str, envelope: MessageEnvelope):
         if not self.channel or self.channel.is_closed:
             self.connect()
-            
+
         body = envelope.model_dump_json()
         properties = pika.BasicProperties(
             delivery_mode=2,  # make message persistent
@@ -125,7 +122,7 @@ class RabbitMQBaseClient:
     def start_consuming(self, queue_name: str):
         if not self.channel or self.channel.is_closed:
             self.connect()
-            
+
         self.channel.basic_qos(prefetch_count=1)
         self.channel.basic_consume(
             queue=queue_name,

@@ -1,9 +1,9 @@
-import os
-import sys
 import signal
+import sys
+
 from dotenv import load_dotenv
-from loguru import logger
 from executor import Executor, HeartbeatThread
+from loguru import logger
 
 # Load environment configuration
 load_dotenv()
@@ -21,13 +21,13 @@ active_heartbeat = None
 
 def handle_shutdown(signum, frame):
     logger.info("Shutdown signal received. Cleansing connections...")
-    
+
     if active_heartbeat:
         active_heartbeat.stop()
-        
+
     if active_executor:
         active_executor.disconnect()
-        
+
     logger.info("Standalone Execution Agent terminated cleanly.")
     sys.exit(0)
 
@@ -37,13 +37,13 @@ signal.signal(signal.SIGTERM, handle_shutdown)
 
 def main():
     global active_executor, active_heartbeat
-    
+
     logger.info("Initializing Standalone Clinical Execution Agent (Agent B)...")
-    
+
     # 1. Start Heartbeat Thread
     active_heartbeat = HeartbeatThread("agent-b")
     active_heartbeat.start()
-    
+
     # 2. Start Message Consumer
     active_executor = Executor()
     try:
