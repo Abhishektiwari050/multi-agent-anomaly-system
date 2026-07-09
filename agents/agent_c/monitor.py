@@ -3,7 +3,7 @@ import threading
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Dict
+from typing import Dict, Optional
 
 from agents.agent_c.task_tracker import TaskTracker
 from shared.logger import setup_logger
@@ -15,7 +15,7 @@ logger = setup_logger("agent-c")
 
 
 class Monitor(RabbitMQBaseClient):
-    def __init__(self, tracker: TaskTracker = None):
+    def __init__(self, tracker: Optional[TaskTracker] = None):
         super().__init__("agent-c")
         self.tracker = tracker or TaskTracker()
         self.heartbeat_registry: Dict[str, datetime] = {}
@@ -47,16 +47,17 @@ class Monitor(RabbitMQBaseClient):
             channel.basic_nack(method.delivery_tag, requeue=False)
 
     def _handle_heartbeat(self, envelope: MessageEnvelope):
-        agent_id = envelope.payload.get("agent_id")
-        self.heartbeat_registry[agent_id] = datetime.now(timezone.utc)
-        logger.debug(f"Heartbeat registered for agent: {agent_id}")
+        agent_id = str(envelope.payload.get("agent_id") or "")
+        if agent_id:
+            self.heartbeat_registry[agent_id] = datetime.now(timezone.utc)
+            logger.debug(f"Heartbeat registered for agent: {agent_id}")
 
     def _handle_progress(self, envelope: MessageEnvelope):
         payload = envelope.payload
-        task_id = payload.get("task_id")
-        status = payload.get("status", "IN_PROGRESS")
-        pct = payload.get("progress_pct", 0)
-        sub_task = payload.get("current_sub_task", "")
+        task_id = str(payload.get("task_id") or "")
+        status = str(payload.get("status") or "IN_PROGRESS")
+        pct = int(payload.get("progress_pct") or 0)
+        sub_task = str(payload.get("current_sub_task") or "")
 
         logger.info(f"Task {task_id} progress update: {pct}% ({sub_task})")
         self.tracker.update_task(
@@ -64,16 +65,16 @@ class Monitor(RabbitMQBaseClient):
             status=status,
             progress_pct=pct,
             current_sub_task=sub_task,
-            records_processed=payload.get("records_processed", 0),
-            total_records=payload.get("total_records", 0),
-            anomalies_so_far=payload.get("anomalies_so_far", 0),
+            records_processed=int(payload.get("records_processed") or 0),
+            total_records=int(payload.get("total_records") or 0),
+            anomalies_so_far=int(payload.get("anomalies_so_far") or 0),
         )
 
     def _handle_completion(self, envelope: MessageEnvelope):
         payload = envelope.payload
-        task_id = payload.get("task_id")
-        summary = payload.get("result_summary", {})
-        execution_time = payload.get("execution_time_ms", 0)
+        task_id = str(payload.get("task_id") or "")
+        summary = dict(payload.get("result_summary") or {})
+        execution_time = int(payload.get("execution_time_ms") or 0)
 
         logger.info(f"Task {task_id} completed in {execution_time}ms.")
         self.tracker.update_task(
@@ -86,7 +87,7 @@ class Monitor(RabbitMQBaseClient):
         )
 
         # Analyze severity levels
-        high_severity_count = summary.get("high_severity", 0)
+        high_severity_count = int(summary.get("high_severity") or 0)
         logger.info(f"Analyzing anomalies for Task {task_id}. High severity count: {high_severity_count}")
 
         if high_severity_count >= 5:
@@ -116,8 +117,8 @@ class Monitor(RabbitMQBaseClient):
 
     def _handle_failure(self, envelope: MessageEnvelope):
         payload = envelope.payload
-        task_id = payload.get("task_id")
-        error_msg = payload.get("error", "Unknown error")
+        task_id = str(payload.get("task_id") or "")
+        error_msg = str(payload.get("error") or "Unknown error")
 
         logger.error(f"Task {task_id} failed: {error_msg}")
         self.tracker.update_task(

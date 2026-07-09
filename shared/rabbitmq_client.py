@@ -42,6 +42,7 @@ class RabbitMQBaseClient:
                     f"[{self.client_name}] Connecting to RabbitMQ (attempt {attempt}/{max_attempts}) at {self.params.host}:{self.params.port}"
                 )
                 self.connection = pika.BlockingConnection(self.params)
+                assert self.connection is not None
                 self.channel = self.connection.channel()
                 self._declare_topology()
                 logger.info(f"[{self.client_name}] Connected to RabbitMQ.")
@@ -79,6 +80,7 @@ class RabbitMQBaseClient:
     def publish(self, routing_key: str, envelope: MessageEnvelope):
         if not self.channel or self.channel.is_closed:
             self.connect()
+        assert self.channel is not None
 
         body = envelope.model_dump_json()
         properties = pika.BasicProperties(
@@ -93,6 +95,7 @@ class RabbitMQBaseClient:
     def start_consuming(self, queue_name: str):
         if not self.channel or self.channel.is_closed:
             self.connect()
+        assert self.channel is not None
 
         self.channel.basic_qos(prefetch_count=1)
         self.channel.basic_consume(queue=queue_name, on_message_callback=self._wrap_handle_message)
