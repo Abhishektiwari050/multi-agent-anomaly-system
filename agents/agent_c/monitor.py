@@ -1,3 +1,4 @@
+import os
 import uuid
 import time
 import threading
@@ -175,4 +176,3 @@ class Monitor(RabbitMQBaseClient):
     def run_consumer(self):
         self.connect()
         self.start_consuming(QUEUE_AGENT_C_REPORTS)
-import os
