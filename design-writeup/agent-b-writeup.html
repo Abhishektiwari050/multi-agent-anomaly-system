@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clinical Execution Agent Implementation Report</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    @page {
+      size: A4;
+      margin: 20mm 20mm 25mm 20mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #0f172a;
+      background-color: #f8fafc;
+      line-height: 1.6;
+      font-size: 10pt;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background-color: #ffffff;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 2px solid #0f766e;
+      padding-bottom: 6mm;
+      margin-bottom: 8mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .header-left h1 {
+      font-size: 20pt;
+      font-weight: 800;
+      color: #0f766e;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .header-left p {
+      font-size: 10pt;
+      color: #64748b;
+      margin-top: 1mm;
+      font-weight: 500;
+    }
+
+    .header-right {
+      text-align: right;
+    }
+
+    .header-right img {
+      height: 38px;
+      margin-bottom: 2mm;
+    }
+
+    .section-title {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #0f766e;
+      border-left: 3.5px solid #0f766e;
+      padding-left: 3mm;
+      margin-top: 8mm;
+      margin-bottom: 4mm;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    p {
+      margin-bottom: 4mm;
+      color: #334155;
+      text-align: justify;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5mm;
+      margin-bottom: 5mm;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 4.5mm;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    }
+
+    .card h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2.5mm;
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+    }
+
+    .card h3 span {
+      background: #ccfbf1;
+      color: #0f766e;
+      font-size: 8pt;
+      padding: 0.5mm 2mm;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .card p {
+      font-size: 9.5pt;
+      color: #475569;
+      margin-bottom: 0;
+    }
+
+    /* Checklist Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 6mm;
+      background: #ffffff;
+    }
+
+    th {
+      background-color: #0f766e;
+      color: #ffffff;
+      text-align: left;
+      font-weight: 600;
+      font-size: 9pt;
+      padding: 2.5mm 3.5mm;
+      border: 1px solid #0f766e;
+    }
+
+    td {
+      padding: 2.5mm 3.5mm;
+      font-size: 9pt;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.5mm 2mm;
+      font-size: 8pt;
+      font-weight: 600;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-success {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-info {
+      background-color: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .status-check {
+      color: #0f766e;
+      font-weight: bold;
+      margin-right: 1mm;
+    }
+
+    /* Images */
+    .image-container {
+      text-align: center;
+      margin: 5mm 0;
+      background: #ffffff;
+      padding: 4mm;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+    }
+
+    .image-container img {
+      max-width: 100%;
+      max-height: 180px;
+      object-fit: contain;
+    }
+
+    .image-container p {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-top: 2.5mm;
+      margin-bottom: 0;
+      text-align: center;
+    }
+
+    .code-block {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 8.5pt;
+      padding: 4mm;
+      border-radius: 6px;
+      margin-bottom: 5mm;
+      white-space: pre-wrap;
+      border-left: 3.5px solid #38bdf8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- PAGE 1 -->
+    <header>
+      <div class="header-left">
+        <h1>Clinical Execution Agent Report</h1>
+        <p>AURA System Compute Node Task Implementation & Verification</p>
+      </div>
+      <div class="header-right">
+        <img src="../docs/images/logo.png" alt="AURA Logo">
+      </div>
+    </header>
+
+    <div class="section-title">1. Executive Summary</div>
+    <p>
+      This technical report documents the implementation and verification details of the standalone **Execution Agent (Agent B)** from the **AURA Clinical Monitoring System**. The agent operates as a decoupled compute service within the multi-agent design, responding asynchronously to simulation and statistical modeling tasks via an AMQP event broker. It handles vital signs generation, unsupervised outlier detection using Isolation Forest models, severity tag profiling, and clinical diagnostics reporting.
+    </p>
+
+    <div class="image-container">
+      <img src="../docs/images/welcome.png" alt="AURA Diagnostics Welcome">
+      <p>Figure 1.1: AURA diagnostics agent-driven startup panel interface</p>
+    </div>
+
+    <div class="section-title">2. Operational Responsibilities</div>
+    <div class="grid-2">
+      <div class="card">
+        <h3><span>Compute</span> Vital Simulation</h3>
+        <p>Generates multi-dimensional vitals (heart rate, blood pressure, temperature, oxygen saturation, glucose) mapping to clinical distributions, injecting multivariate outliers to model distress states.</p>
+      </div>
+      <div class="card">
+        <h3><span>ML Engine</span> Isolation Forest</h3>
+        <p>Fits a multivariate scikit-learn Isolation Forest model locally over evaluated data. Partitions anomalous clusters and assigns severity values based on contamination threshold calculations.</p>
+      </div>
+      <div class="card">
+        <h3><span>Eventing</span> Queue Broker Client</h3>
+        <p>Subscribes to incoming task queues and posts progressive completion states (25%, 50%, 75%, 100%) and reports to feedback nodes using direct/topic exchange routing keys.</p>
+      </div>
+      <div class="card">
+        <h3><span>Resilience</span> Process Heartbeats</h3>
+        <p>Maintains process visibility by running a dedicated background thread that dispatches telemetry health check-ins every 30 seconds to the Watchdog Monitor.</p>
+      </div>
+    </div>
+
+    <!-- PAGE BREAK FOR PAGE 2 -->
+    <div class="page-break"></div>
+
+    <header>
+      <div class="header-left">
+        <h1>Clinical Execution Agent Report</h1>
+        <p>AURA System Compute Node Task Implementation & Verification</p>
+      </div>
+      <div class="header-right">
+        <img src="../docs/images/logo.png" alt="AURA Logo">
+      </div>
+    </header>
+
+    <div class="section-title">3. Completed Tasks Checklist & Verification Notes</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 10%;">Status</th>
+          <th style="width: 30%;">Task Category</th>
+          <th style="width: 60%;">Detailed Implementation Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="status-check">✓</span> Done</td>
+          <td>Directory Setup</td>
+          <td>Created a standalone directory <code>/execution-agent</code> packaging all scripts, Dockerfile, and requirements in isolation from main project dependencies.</td>
+        </tr>
+        <tr>
+          <td><span class="status-check">✓</span> Done</td>
+          <td>Connection Client</td>
+          <td>Written <code>rabbitmq_client.py</code> wrapping pikaURL connection, SSL bypass settings (critical for Render deployment), and standard queue/exchange binding declarations.</td>
+        </tr>
+        <tr>
+          <td><span class="status-check">✓</span> Done</td>
+          <td>ML Algorithms</td>
+          <td>Programmed vitals generation, Isolation Forest modeling, and patient alert report compiler inside <code>ml_utils.py</code>.</td>
+        </tr>
+        <tr>
+          <td><span class="status-check">✓</span> Done</td>
+          <td>Consumer Loop</td>
+          <td>Implemented <code>executor.py</code> consuming tasks, executing pipeline stages, publishing progressive updates, and emitting background heartbeats.</td>
+        </tr>
+        <tr>
+          <td><span class="status-check">✓</span> Done</td>
+          <td>Verification Tests</td>
+          <td>Created unit and integration tests inside <code>test_executor.py</code> validating data generator shapes, model boundaries, and mock broker publishers.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-title">4. Verification Output Report</div>
+    <p>
+      We verified the functionality of the isolated Execution Agent locally by running pytest against the mock testing harness. All unit assertions and integration message loops passed successfully.
+    </p>
+    <div class="code-block">
+============================= test session starts =============================
+platform win32 -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\abhis\.gemini\antigravity\scratch\execution-agent
+collected 5 items
+
+test_executor.py .....                                                   [100%]
+
+======================= 5 passed, 2 warnings in 25.35s ========================
+    </div>
+
+    <div class="image-container" style="margin-top: 4mm;">
+      <img src="../docs/images/progress.png" alt="Orchestration Progress Panel">
+      <p>Figure 3.1: Live progress stepper monitoring Agent B executing simulation and ML cycles</p>
+    </div>
+
+    <!-- PAGE BREAK FOR PAGE 3 -->
+    <div class="page-break"></div>
+
+    <header>
+      <div class="header-left">
+        <h1>Clinical Execution Agent Report</h1>
+        <p>AURA System Compute Node Task Implementation & Verification</p>
+      </div>
+      <div class="header-right">
+        <img src="../docs/images/logo.png" alt="AURA Logo">
+      </div>
+    </header>
+
+    <div class="section-title">5. Core Communication Protocol Schema</div>
+    <p>
+      The agent implements strict JSON schemas mapping to the system <code>MessageEnvelope</code> contracts to guarantee seamless inter-agent communications:
+    </p>
+    <div class="code-block" style="font-size: 8pt; padding: 3mm;">
+{
+  "message_id": "uuid-string",
+  "sender_id": "agent-b",
+  "receiver_id": "agent-c",
+  "message_type": "TASK_PROGRESS",
+  "timestamp": "2026-07-09T12:25:40Z",
+  "correlation_id": "corr-uuid-string",
+  "priority": 2,
+  "routing_key": "report.task-status",
+  "payload": {
+    "task_id": "task-uuid-string",
+    "progress_pct": 50,
+    "current_sub_task": "train",
+    "records_processed": 1000,
+    "total_records": 1000,
+    "anomalies_so_far": 0,
+    "status": "IN_PROGRESS"
+  }
+}
+    </div>
+
+    <div class="section-title">6. Assumptions & Operational Limitations</div>
+    <p>
+      *   **Stateless Operations**: The agent is designed to run in completely stateless topologies. It acts strictly as an execution worker; report persistence and history databases are handled by the core FastAPI server database and Agent C (Monitor).
+      *   **SSL Handshake Bypasses**: The RabbitMQ connection settings utilize default TLS bypasses (<code>verify_mode = CERT_NONE</code>) to connect successfully within locked container networks (such as Render). This should be configured to use trusted local authority certificate paths in secure clinical intranets.
+      *   **Telemetry Simulation Scale**: The generated vital profiles are modeled around standard clinical limits. Real patient vitals require scaling adjustments and model tuning before deployment as diagnostic tools.
+    </p>
+
+    <div class="section-title">7. Development Audit & Attributions</div>
+    <p>
+      *   **Ideation & Master Plan**: Formulated in coordination with **Claude** (tech stack selection and supervisors architecture).
+      *   **Code Implementation & Debugging**: Completed in collaboration with **Gemini (Antigravity/Nebula)**. Gemini resolved pika connection socket corruption via separate threading, updated SSL parameter handshakes, built the CSS UI interface layout, and fixed test isolation.
+    </p>
+
+    <div style="margin-top: 10mm; border-top: 1px solid #e2e8f0; padding-top: 5mm; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <p style="font-size: 8.5pt; color: #64748b; margin-bottom: 0;"><strong>Developer Signature:</strong></p>
+        <p style="font-size: 10pt; font-weight: 700; color: #0f766e; margin-bottom: 0; margin-top: 1mm;">Abhishek Tiwari</p>
+      </div>
+      <div style="text-align: right;">
+        <p style="font-size: 8.5pt; color: #64748b; margin-bottom: 0;"><strong>Date of Submission:</strong></p>
+        <p style="font-size: 9.5pt; font-weight: 600; color: #0f172a; margin-bottom: 0; margin-top: 1mm;">July 9, 2026</p>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

@@ -23,3 +23,8 @@ test_tasks*.json
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Node dependencies
+node_modules/
+dist/
+
