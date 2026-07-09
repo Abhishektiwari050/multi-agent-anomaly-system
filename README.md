@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="docs/images/logo.png" alt="Clinical Anomaly Detection System Logo" width="180px">
+  <img src="docs/images/logo.png" alt="AURA Logo" width="180px">
 </p>
 
-<h1 align="center">Clinical Anomaly Detection System</h1>
+<h1 align="center">AURA</h1>
 
 <p align="center">
-  <strong>A Production-Grade, Multi-Agent Asynchronous Diagnostic Engine & Telemetry Monitoring Dashboard</strong>
+  <strong>Asynchronous Diagnostic Engine & Telemetry Monitoring Dashboard</strong>
 </p>
 
 <p align="center">
@@ -16,8 +16,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/banner.png" alt="Clinical Anomaly Detection System Dashboard Banner" width="100%">
+  <img src="docs/images/banner.png" alt="AURA Clinical Monitoring System Dashboard" width="100%">
 </p>
+
 
 ---
 
