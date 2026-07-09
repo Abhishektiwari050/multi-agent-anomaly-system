@@ -1,0 +1,35 @@
+name: 🚀 Feature Request
+description: Propose a new feature, improvement, or agent integration.
+labels: [enhancement, feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for making the multi-agent anomaly detection system better? We'd love to hear it!
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Describe the Feature Idea
+      description: A clear and concise description of what you want to achieve.
+      placeholder: E.g., Add a medical alert dashboard notification filter or integrate a new model...
+    validations:
+      required: true
+  - type: textarea
+    id: problem-solved
+    attributes:
+      label: Problem Solved
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: E.g., It is difficult to filter out low-severity anomalies when...
+    validations:
+      required: true
+  - type: textarea
+    id: design-proposal
+    attributes:
+      label: Proposed Implementation
+      description: Describe the design, architecture, or changes needed to implement this feature.
+      placeholder: E.g., Modify the Monitor agent's routing rules and add a websocket notification.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.

@@ -1,0 +1,52 @@
+name: 🐛 Bug Report
+description: Report a bug or issue in the multi-agent anomaly system.
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: describe-bug
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+      placeholder: E.g., The Executor Agent fails to acknowledge a task message when...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: How do we reproduce this issue? Please include code snippets, configurations, or steps.
+      placeholder: |
+        1. Start RabbitMQ container
+        2. Run supervisord ...
+        3. Trigger POST /tasks/analyze
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: E.g., The agent should acknowledge the message and retry or route it to the DLQ.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or Console Output
+      description: Copy and paste command line outputs or log files here if available.
+      render: shell
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Docker
+    validations:
+      required: true

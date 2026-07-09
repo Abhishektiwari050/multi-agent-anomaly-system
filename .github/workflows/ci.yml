@@ -1,0 +1,71 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q check_running"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends build-essential
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install ruff mypy pytest pytest-cov pytest-asyncio
+
+    - name: Run Ruff Lint Check
+      run: ruff check .
+
+    - name: Run Ruff Format Check
+      run: ruff format --check .
+
+    - name: Run Mypy Type Check
+      run: |
+        # Check shared modules and executor standalone packages
+        mypy --ignore-missing-imports shared api agents execution-agent
+
+    - name: Run Pytest Suite
+      env:
+        RABBITMQ_HOST: localhost
+        RABBITMQ_PORT: 5672
+        RABBITMQ_USER: guest
+        RABBITMQ_PASS: guest
+        EXCHANGE_NAME: test_exchange
+      run: |
+        pytest --cov=shared --cov=api --cov=agents --cov-report=xml
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
