@@ -1,70 +1,85 @@
-# Standalone Clinical Execution Agent (Agent B)
+<p align="center">
+  <img src="../docs/images/logo.png" alt="AURA Logo" width="120px">
+</p>
 
-This project contains a standalone, fully-functional implementation of the **Execution Agent (Agent B)** from the Multi-Agent Anomaly Detection System architecture.
+<h1 align="center">AURA Standalone Clinical Execution Agent</h1>
+<p align="center">
+  <strong>Decoupled Compute Node: Data Simulation, Isolation Forest ML Modeling, and Telemetry Reporting</strong>
+</p>
 
----
-
-## 1. Purpose and Responsibilities
-
-The Execution Agent is the compute core of the diagnostics system. Its primary responsibilities are:
-1.  **Queue Listening**: Subscribes to the `agent.b.tasks` queue using a RabbitMQ consumer connection and consumes `TASK_ASSIGNMENT` packets.
-2.  **Dataset Simulation**: Generates high-fidelity clinical vital signs telemetry (Heart Rate, Blood Oxygen saturation $SpO_2$, Blood Pressure, Temperature, Respiratory Rate, Glucose) programmatically based on configuration parameters.
-3.  **Machine Learning Training**: Fits a multivariate **Isolation Forest** model to establish a patient vitals baseline.
-4.  **Anomaly Detection**: Predicts multivariate deviations, isolates records indicating medical emergency patterns (e.g. hypoxic distress paired with elevated heart rate), and classifies them into High, Medium, and Low severity indices.
-5.  **Telemetry Reporting**: Compiles a diagnostic report detailing total counts, average anomaly scores, and vital signs profiles of the top 5 most anomalous patients.
-6.  **Progress Updates**: Publishes periodic `TASK_PROGRESS` updates to notify the system Monitor (Agent C) as it completes simulation, training, and predicting steps.
-7.  **Task Finalization**: Dispatches `TASK_COMPLETED` (or `TASK_FAILED`) messages to both Agent C (Monitor) and Agent A (Planner) upon run completion.
-8.  **Process Heartbeats**: Spawns a dedicated background thread that publishes telemetry heartbeats to notify Agent C that it remains online and healthy.
+<p align="center">
+  <a href="https://github.com/Abhishektiwari050/multi-agent-anomaly-system/actions/workflows/ci.yml"><img src="https://github.com/Abhishektiwari050/multi-agent-anomaly-system/actions/workflows/ci.yml/badge.svg" alt="CI Pipeline Status"></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Code Style: Ruff"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
 
 ---
 
-## 2. Architecture & Communication Protocol
+## 🌟 Purpose and Responsibilities
 
-The agent is decoupled from the REST API gateway and other agents. It coordinates with them asynchronously via AMQP routing keys:
+The **Execution Agent (Agent B)** is the heavy compute node of the AURA architecture. Designed to be completely stateless, it processes diagnostic calculations asynchronously without blocking REST interfaces.
 
+Its primary operational cycles include:
+1.  **Ingestion & Listening**: Subscribes to the `agent.b.tasks` queue, consuming `TASK_ASSIGNMENT` message packets.
+2.  **Dataset Simulation**: Generates multi-dimensional patient vital signs telemetry based on task variables.
+3.  **Machine Learning Modeling**: Fits an unsupervised **Isolation Forest** model to establish baseline vital patterns.
+4.  **Anomaly Isolation**: Predicts and isolates multivariate vital deviations (e.g. hypoxic events combined with tachycardia) and labels outlier severity.
+5.  **Telemetry Reporting**: Formats a medical summary containing average anomaly scores and patient profiles of the top 5 outliers.
+6.  **Progress Signaling**: Emits periodic progress ticks (`25%`, `50%`, `75%`, `100%`) to the system Monitor (Agent C).
+7.  **Active Heartbeats**: Runs a dedicated concurrent thread publishing health telemetry status to the broker every 30s.
+
+---
+
+## 🛠️ Internal Data Processing Pipeline
+
+When a task assignment is received, the Executor executes the following sequence:
+
+```mermaid
+graph TD
+    Queue[agent.b.tasks Queue] -->|TASK_ASSIGNMENT| Consume[Consume Msg]
+    
+    subgraph Execution Loop
+        Consume -->|25% Progress| Sim[generate_patient_vitals]
+        Sim -->|50% Progress| Train[Train Isolation Forest]
+        Train -->|75% Progress| Predict[Classify Outlier Severity]
+        Predict -->|100% Progress| Report[build_report Summary]
+    end
+    
+    Report -->|Publish TASK_COMPLETED| ReportQueue[report.task-status Key]
+    Report -->|Publish TASK_COMPLETED| FeedbackQueue[feedback.agent-a Key]
+    
+    classDef step fill:#0F766E,stroke:#0F172A,stroke-width:2px,color:#FFFFFF;
+    classDef io fill:#F8FAFC,stroke:#0F766E,stroke-width:1px,color:#0F172A;
+    class Sim,Train,Predict,Report step;
+    class Queue,Consume,ReportQueue,FeedbackQueue io;
 ```
-                          +------------------------+
-                          |   FastAPI Web Server   |
-                          +-----------+------------+
-                                      |
-                                  HTTP POST
-                                      v
-+------------------+    task.agent-b  +------------------------+
-| Agent A (Planner)+----------------->|   CloudAMQP Broker     |
-+--------^---------+                  +-----------+------------+
-         |                                        |
-      feedback.#                               task.#
-         |                                        v
-         |  feedback.agent-a          +-----------+------------+
-         +----------------------------+ Agent B (Executor)     |
-                                      +-----------+------------+
-                                                  |
-                                               report.#
-                                                  v
-+------------------+                  +-----------+------------+
-| Agent C (Monitor)|<-----------------+  agent.c.reports Queue |
-+------------------+                  +------------------------+
-```
-
-### Routing Keys Used:
-*   **Consume**: Listen to `agent.b.tasks` queue (bound to pattern `task.#`).
-*   **Publish Status**: Dispatch updates (`TASK_PROGRESS`, `TASK_COMPLETED`, `TASK_FAILED`, `HEARTBEAT`) to `report.task-status` routing key (routed to `agent.c.reports` queue).
-*   **Publish Feedback**: Dispatch coordination signals (`TASK_ACCEPTED`, `TASK_COMPLETED`, `TASK_FAILED`) to `feedback.agent-a` routing key (routed to `agent.a.feedback` queue).
 
 ---
 
-## 3. Setup and Run Instructions
+## 📄 Incoming Task Parameters
+
+The agent expects the following values in the `TASK_ASSIGNMENT` payload:
+
+| Parameter Key | Data Type | Default | Description |
+|:---|:---|:---|:---|
+| `total_records` | `int` | `1000` | Size of the generated vital signs dataset to evaluate. |
+| `contamination` | `float` | `0.05` | Expected percentage of clinical anomalies to inject/detect (0.01 - 0.20). |
+| `random_seed` | `int` | `42` | Seed to guarantee repeatable data simulation and model results. |
+
+---
+
+## ⚙️ Setup and Run Instructions
 
 ### Prerequisites
 *   Python 3.11 or later.
 *   Access to a running RabbitMQ broker (local or CloudAMQP instance).
 
-### Local Installation
-1.  **Navigate to the directory**:
+### Local Installation & Startup
+1.  **Navigate to this directory**:
     ```bash
-    cd C:/Users/abhis/.gemini/antigravity/scratch/execution-agent
+    cd execution-agent
     ```
-2.  **Create a Virtual Environment**:
+2.  **Setup Virtual Environment**:
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # On Windows: .venv\Scripts\activate
@@ -73,44 +88,40 @@ The agent is decoupled from the REST API gateway and other agents. It coordinate
     ```bash
     pip install -r requirements.txt
     ```
-4.  **Configure environment variables**:
-    Copy `.env.example` to `.env` and fill in your connection credentials:
+4.  **Configure Credentials**:
+    Copy `.env.example` to `.env` and fill in your connection string:
     ```bash
     cp .env.example .env
     ```
+5.  **Run the Agent**:
+    ```bash
+    python main.py
+    ```
 
-### Running the Agent
-Start the consumer execution loops:
-```bash
-python main.py
-```
-
-### Running the Test Suite
-Verify that all unit and mock integration tests pass successfully:
+### Running Tests
+Run unit assertions and mock connection handlers:
 ```bash
 pytest test_executor.py
 ```
 
 ---
 
-## 4. Docker Deployment
+## 🐳 Docker Deployment
 
-To build and run the standalone agent container:
+To build and run this compute node in a container:
 
-1.  **Build the Docker Image**:
-    ```bash
-    docker build -t clinical-execution-agent .
-    ```
-2.  **Run the Container**:
-    ```bash
-    docker run --env-file .env clinical-execution-agent
-    ```
+```bash
+# Build
+docker build -t clinical-execution-agent .
+
+# Run
+docker run --env-file .env clinical-execution-agent
+```
 
 ---
 
-## 5. Assumptions and Limitations
+## ⚠️ Assumptions and Limitations
 
-*   **RabbitMQ Topology**: Assumes the `agent.events` topic exchange and binding patterns are correctly initialized. The base client handles auto-declaration of these components on startup, but requires appropriate queue setup privileges.
-*   **Synthetic Telemetry**: The vitals data processed is programmatically generated for demonstration and safety. It should not be used as a diagnostics tool for actual human vital records without adjusting baseline scales and model tuning.
-*   **State Management**: The agent is designed to be stateless. It processes incoming messages, builds report dictionaries, and publishes results, but does not store run histories locally on disk. Long-term storage of tasks is delegated to Agent C (Monitor).
-*   **SSL Handshake**: If connecting to CloudAMQP, a default TLS context with bypassed certificate verification (`verify_mode = CERT_NONE`) is implemented. This is necessary for running inside locked container platforms like Render, but should be adjusted in highly secure corporate network topologies.
+*   **Stateless Execution**: The agent does not persist results locally. Task history and report storage are delegated to Agent C (Monitor) and the FastAPI database.
+*   **SSL Bypass**: To support secure cloud deployment platforms (like Render) that fail to validate intermediate CloudAMQP certificates, the agent connects using `ssl.CERT_NONE` overrides. Adjust to strict certificate validation in secure enterprise networks.
+*   **Synthetic Baseline**: Vital boundaries and Isolation Forest scores are clinically simulated. They should not be used as clinical diagnostic parameters for real patients.
