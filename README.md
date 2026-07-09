@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/banner.png" alt="AURA Clinical Monitoring System Dashboard" width="100%">
+  <img src="docs/images/results.png" alt="AURA Clinical Monitoring System Results Dashboard" width="100%">
 </p>
 
 
@@ -136,7 +136,12 @@ Spin up the coordinated environment (FastAPI REST Gateway, Planner, Executor, Mo
 ```bash
 supervisord -c supervisord.conf
 ```
-You can view active tasks and trigger simulations by loading `http://localhost:8000` in your browser.
+You can view active tasks and trigger simulations by loading `http://localhost:8000` in your browser:
+
+<p align="center">
+  <img src="docs/images/banner.png" alt="AURA Initial Dashboard Interface" width="100%">
+</p>
+
 
 ### 4. Running the Standalone Executor Agent
 You can deploy the Executor Agent in isolation (e.g. as a background worker on Render, AWS ECS, or GCP Cloud Run):
